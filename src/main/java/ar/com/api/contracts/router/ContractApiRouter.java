@@ -25,7 +25,10 @@ public class ContractApiRouter {
 
  @Value("${coins.contractAddressByIdMarketChart}")
  private String URL_CONTRACT_MARKET_CHART;
- 
+
+ @Value("${coins.contractAddressByIdMarketChartByRange}")
+ private String URL_CONTRACT_MARKET_CHART_BY_ID_AND_RANGE;
+
  @Bean
  public RouterFunction<ServerResponse> route(ContractApiHandler handler) {
 
@@ -38,6 +41,9 @@ public class ContractApiRouter {
             .GET(URL_SERVICE_API + URL_CONTRACT_MARKET_CHART,
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         handler::getContractAddressMarketChartById)
+            .GET(URL_SERVICE_API + URL_CONTRACT_MARKET_CHART_BY_ID_AND_RANGE,
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        handler::getContractAddressMarketChartByIdAndRange)
             .build();
 
  }

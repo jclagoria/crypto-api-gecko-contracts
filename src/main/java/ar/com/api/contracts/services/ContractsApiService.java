@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
@@ -21,6 +22,9 @@ public class ContractsApiService {
 
  @Value("${api.contractAddressByIdMarketChart}")
  private String URL_CONTRACT_ADDRESS_MARKET_CHART_API; 
+
+ @Value("${api.contractAddressByIdMarketChartByRange}")
+ private String URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API; 
 
  private WebClient wClient;
 
@@ -59,6 +63,23 @@ public class ContractsApiService {
           .bodyToFlux(MarketChart.class)
           .doOnError(throwable -> log.error("The service is unavailable!", throwable))
           .onErrorComplete();
+ }
+
+ public Flux<MarketChart> getContravtAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
+
+   String urlService = String.format(
+            URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API, 
+            filterDto.getId(), 
+            filterDto.getContractAddress());
+   
+   return wClient
+          .get()
+          .uri(urlService + filterDto.getUrlFilterService())
+          .retrieve()
+          .bodyToFlux(MarketChart.class)
+          .doOnError(throwable -> log.error("The service is unavailable!", throwable))
+          .onErrorComplete();
+
  }
 
 }
