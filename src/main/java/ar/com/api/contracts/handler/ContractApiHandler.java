@@ -5,7 +5,9 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
+import ar.com.api.contracts.model.MarketChart;
 import ar.com.api.contracts.model.Ping;
 import ar.com.api.contracts.services.CoinGeckoServiceStatus;
 import ar.com.api.contracts.services.ContractsApiService;
@@ -46,6 +48,24 @@ public class ContractApiHandler {
                .body(
                     serviceContract.getAssertPlatformAddressById(filterDTO), 
                     AssertPlatformAddressById.class);
+ }
+
+ public Mono<ServerResponse> getContractAddressMarketChartById(ServerRequest sRequest) {
+     
+     MarketChartDTO filterDto = MarketChartDTO
+                                   .builder()
+                                   .id(sRequest.pathVariable("id"))
+                                   .contractAddress(sRequest.pathVariable("contractAddress"))
+                                   .days(sRequest.queryParam("days").get())
+                                   .vsCurrency(sRequest.queryParam("vsCurrency").get())
+                                   .build();
+     
+     return ServerResponse
+               .ok()
+               .body(
+                    serviceContract.getContractAddressMarketChartById(filterDto), 
+                    MarketChart.class);
+
  }
 
 }

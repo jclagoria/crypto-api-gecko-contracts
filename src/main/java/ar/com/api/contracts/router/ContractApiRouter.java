@@ -3,6 +3,8 @@ package ar.com.api.contracts.router;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.MediaType;
+import org.springframework.web.reactive.function.server.RequestPredicates;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.RouterFunctions;
 import org.springframework.web.reactive.function.server.ServerResponse;
@@ -20,6 +22,9 @@ public class ContractApiRouter {
 
  @Value("${coins.contractAddressId}")
  private String URL_CONTRACT_BY_ID_URL;
+
+ @Value("${coins.contractAddressByIdMarketChart}")
+ private String URL_CONTRACT_MARKET_CHART;
  
  @Bean
  public RouterFunction<ServerResponse> route(ContractApiHandler handler) {
@@ -29,7 +34,10 @@ public class ContractApiRouter {
             .GET(URL_SERVICE_API + URL_HEALTH_GECKO_API, 
                         handler::getStatusServiceCoinGecko)
             .GET(URL_SERVICE_API + URL_CONTRACT_BY_ID_URL, 
-                        handler::getContractAddressById)            
+                        handler::getContractAddressById)
+            .GET(URL_SERVICE_API + URL_CONTRACT_MARKET_CHART,
+                        RequestPredicates.accept(MediaType.APPLICATION_JSON),
+                        handler::getContractAddressMarketChartById)
             .build();
 
  }

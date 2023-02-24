@@ -6,9 +6,11 @@ coins:
   baseURL: 'api/coins'
   healthAPI: '/health-api'
   contractAddressId: '/{id}/contract/{contractAddress}'
+  contractAddressByIdMarketChart: '/{id}/contract/{contractAddress}/marketChart/'
 
 ## Url Coin Gecko RestService
 api:
   urlCoinGecko: 'https://api.coingecko.com/api/v3'
   ping: '/ping'
   contractAddressById: '/coins/%s/contract/%s'
+  contractAddressByIdMarketChart: '/coins/%s/contract/%s/market_chart/'
