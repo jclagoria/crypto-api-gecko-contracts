@@ -5,6 +5,7 @@ import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
@@ -65,7 +66,24 @@ public class ContractApiHandler {
                .body(
                     serviceContract.getContractAddressMarketChartById(filterDto), 
                     MarketChart.class);
+ }
 
+ public Mono<ServerResponse> getContractAddressMarketChartByIdAndRange(ServerRequest sRequest) {
+
+     MarketChartByRangeDTO filterDto = MarketChartByRangeDTO
+                                   .builder()
+                                   .id(sRequest.pathVariable("id"))
+                                   .contractAddress(sRequest.pathVariable("contractAddress"))
+                                   .vsCurrency(sRequest.queryParam("vsCurrency").get())
+                                   .fromDate(sRequest.queryParam("fromDate").get())
+                                   .toDate(sRequest.queryParam("toDate").get())
+                                   .build();
+     
+     return ServerResponse
+               .ok()
+               .body(
+                    serviceContract.getContravtAddressMarketChartByIdAndRange(filterDto), 
+                    MarketChart.class);
  }
 
 }
