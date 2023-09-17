@@ -21,20 +21,7 @@ import reactor.core.publisher.Mono;
 @Slf4j
 public class ContractApiHandler {
  
- private CoinGeckoServiceStatus serviceStatus;
- 
  private ContractsApiService serviceContract;
-
- public Mono<ServerResponse> getStatusServiceCoinGecko(ServerRequest serverRequest) {
-
-  log.info("In getStatusServiceCoinGecko");
-
-  return ServerResponse
-                .ok()
-                .body(
-                     serviceStatus.getStatusCoinGeckoService(), 
-                     Ping.class);
- }
 
  public Mono<ServerResponse> getContractAddressById(ServerRequest sRequest) {
 

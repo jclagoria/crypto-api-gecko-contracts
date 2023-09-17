@@ -1,6 +1,8 @@
 package ar.com.api.contracts.services;
 
+import ar.com.api.contracts.exception.ManageExceptionCoinGeckoServiceApi;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -15,7 +17,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class ContractsApiService {
+public class ContractsApiService extends  CoinGeckoServiceApi {
  
  @Value("${api.contractAddressById}")
  private String URL_CONTRACT_ADDRESS_BY_ID_API;
@@ -40,12 +42,21 @@ public class ContractsApiService {
                             filterDto.getContractAddress());
   
   return wClient
-            .get()
-            .uri(urlServiceApi)
-            .retrieve()
-            .bodyToMono(AssertPlatformAddressById.class)
-            .doOnError(throwable -> log.error("The service is unavailable!", throwable))
-            .onErrorComplete();
+          .get()
+          .uri(urlServiceApi)
+          .retrieve()
+          .onStatus(
+                  HttpStatusCode::is4xxClientError,
+                  getClientResponseMonoDataException()
+          )
+          .onStatus(
+                  HttpStatusCode::is5xxServerError,
+                  getClientResponseMonoServerException()
+          )
+          .bodyToMono(AssertPlatformAddressById.class)
+          .doOnError(
+                  ManageExceptionCoinGeckoServiceApi::throwServiceException
+          );
 
  }
 
@@ -60,9 +71,18 @@ public class ContractsApiService {
           .get()
           .uri(urlService + filterDto.getUrlFilterService())
           .retrieve()
+          .onStatus(
+                  HttpStatusCode::is4xxClientError,
+                  getClientResponseMonoDataException()
+          )
+          .onStatus(
+                  HttpStatusCode::is5xxServerError,
+                  getClientResponseMonoServerException()
+          )
           .bodyToFlux(MarketChart.class)
-          .doOnError(throwable -> log.error("The service is unavailable!", throwable))
-          .onErrorComplete();
+          .doOnError(
+                  ManageExceptionCoinGeckoServiceApi::throwServiceException
+          );
  }
 
  public Flux<MarketChart> getContravtAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
@@ -76,9 +96,18 @@ public class ContractsApiService {
           .get()
           .uri(urlService + filterDto.getUrlFilterService())
           .retrieve()
+           .onStatus(
+                   HttpStatusCode::is4xxClientError,
+                   getClientResponseMonoDataException()
+           )
+           .onStatus(
+                   HttpStatusCode::is5xxServerError,
+                   getClientResponseMonoServerException()
+           )
           .bodyToFlux(MarketChart.class)
-          .doOnError(throwable -> log.error("The service is unavailable!", throwable))
-          .onErrorComplete();
+           .doOnError(
+                   ManageExceptionCoinGeckoServiceApi::throwServiceException
+           );
 
  }
 

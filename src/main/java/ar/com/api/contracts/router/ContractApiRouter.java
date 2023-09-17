@@ -17,9 +17,6 @@ public class ContractApiRouter {
  @Value("${coins.baseURL}") 
  private String URL_SERVICE_API;
 
- @Value("${coins.healthAPI}") 
- private String URL_HEALTH_GECKO_API;
-
  @Value("${coins.contractAddressId}")
  private String URL_CONTRACT_BY_ID_URL;
 
@@ -30,12 +27,10 @@ public class ContractApiRouter {
  private String URL_CONTRACT_MARKET_CHART_BY_ID_AND_RANGE;
 
  @Bean
- public RouterFunction<ServerResponse> route(ContractApiHandler handler) {
+ public RouterFunction<ServerResponse> routeContractApi(ContractApiHandler handler) {
 
   return RouterFunctions
             .route()
-            .GET(URL_SERVICE_API + URL_HEALTH_GECKO_API, 
-                        handler::getStatusServiceCoinGecko)
             .GET(URL_SERVICE_API + URL_CONTRACT_BY_ID_URL, 
                         handler::getContractAddressById)
             .GET(URL_SERVICE_API + URL_CONTRACT_MARKET_CHART,
