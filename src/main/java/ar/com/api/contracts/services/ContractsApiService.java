@@ -28,7 +28,7 @@ public class ContractsApiService extends  CoinGeckoServiceApi {
  @Value("${api.contractAddressByIdMarketChartByRange}")
  private String URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API; 
 
- private WebClient wClient;
+ private final WebClient wClient;
 
  public ContractsApiService(WebClient webClient) {
   this.wClient = webClient;

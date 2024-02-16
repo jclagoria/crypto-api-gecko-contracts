@@ -6,14 +6,14 @@ import lombok.Getter;
 @Getter
 @Builder
 public class ContractAddressByIdFilterDTO implements IFilterDTO {
- 
- private String idCoin;
- private String contractAddress;
 
- @Override
- public String getUrlFilterService() {   
+    private String idCoin;
+    private String contractAddress;
 
-  return null;
- }
+    @Override
+    public String getUrlFilterService() {
+
+        return null;
+    }
 
 }
