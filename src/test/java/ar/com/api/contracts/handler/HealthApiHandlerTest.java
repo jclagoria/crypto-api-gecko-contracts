@@ -1,4 +1,4 @@
-package ar.com.api.contracts.handlers;
+package ar.com.api.contracts.handler;
 
 import ar.com.api.contracts.handler.HealthApiHandler;
 import ar.com.api.contracts.model.Ping;
@@ -34,7 +34,7 @@ public class HealthApiHandlerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test
+    @Test(priority = 1)
     public void getStatusServiceCoinGecko_Success() {
         Ping expectedPing = Instancio.create(Ping.class);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.just(expectedPing));
@@ -46,7 +46,7 @@ public class HealthApiHandlerTest {
         });
     }
 
-    @Test
+    @Test(priority = 2)
     public void getStatusServiceCoinGecko_ClientError() {
         WebClientResponseException exception = new WebClientResponseException(
                 "Bad Request", 400, "Bad Request", null, null, null, null);
@@ -61,7 +61,7 @@ public class HealthApiHandlerTest {
         });
     }
 
-    @Test
+    @Test(priority = 3)
     public void getStatusServiceCoinGecko_ServerError() {
         WebClientResponseException exception = new WebClientResponseException(
                 "Bad Request", 400, "Bad Request", null, null, null, null);
