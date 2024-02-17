@@ -66,6 +66,8 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 filterDto.getId(),
                 filterDto.getContractAddress());
 
+        log.info("url -> "+ urlService + filterDto.getUrlFilterService());
+
         return wClient
                 .get()
                 .uri(urlService + filterDto.getUrlFilterService())

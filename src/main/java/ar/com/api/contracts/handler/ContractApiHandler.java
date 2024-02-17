@@ -17,6 +17,8 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
+import java.util.Optional;
+
 @Component
 @AllArgsConstructor
 @Slf4j
@@ -56,12 +58,29 @@ public class ContractApiHandler {
 
     public Mono<ServerResponse> getContractAddressMarketChartById(ServerRequest sRequest) {
 
+        String idAsset = sRequest.pathVariable("id");
+        String contractAddress = sRequest.pathVariable("contractAddress");
+
+        if (idAsset.isEmpty() || contractAddress.isEmpty()) {
+            log.error("Id Asset or Contract Address are null or blank");
+            return ServerResponse.noContent().build();
+        }
+
+        Optional<String> daysSearch = sRequest.queryParam("days");
+        Optional<String> currencySearch = sRequest.queryParam("vsCurrency");
+
+        if(!daysSearch.isPresent() || !currencySearch.isPresent()) {
+            log.error("Days of search or Vs Currency are null or blank");
+            return ServerResponse.noContent().build();
+        }
+
         MarketChartDTO filterDto = MarketChartDTO
                 .builder()
-                .id(sRequest.pathVariable("id"))
-                .contractAddress(sRequest.pathVariable("contractAddress"))
-                .days(sRequest.queryParam("days").get())
-                .vsCurrency(sRequest.queryParam("vsCurrency").get())
+                .id(idAsset)
+                .contractAddress(contractAddress)
+                .days(daysSearch.get())
+                .vsCurrency(currencySearch.get())
+                .precision(sRequest.queryParam("precision"))
                 .build();
 
         return ServerResponse
