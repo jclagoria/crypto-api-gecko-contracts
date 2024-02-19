@@ -21,8 +21,7 @@ public class ContractsApiService extends CoinGeckoServiceApi {
 
     private final WebClient wClient;
     private final ExternalServerConfig externalServerConfig;
-    @Value("${api.contractAddressByIdMarketChart}")
-    private String URL_CONTRACT_ADDRESS_MARKET_CHART_API;
+
     @Value("${api.contractAddressByIdMarketChartByRange}")
     private String URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API;
 
@@ -59,26 +58,28 @@ public class ContractsApiService extends CoinGeckoServiceApi {
 
     }
 
-    public Flux<MarketChart> getContractAddressMarketChartById(MarketChartDTO filterDto) {
+    public Mono<MarketChart> getContractAddressMarketChartById(MarketChartDTO filterDto) {
 
         String urlService = String.format(
-                URL_CONTRACT_ADDRESS_MARKET_CHART_API,
+                externalServerConfig.getContractAddressByIdMarketChart(),
                 filterDto.getId(),
                 filterDto.getContractAddress());
+
+        log.info("Calling method: {}",  urlService + filterDto.getUrlFilterService());
 
         return wClient
                 .get()
                 .uri(urlService + filterDto.getUrlFilterService())
                 .retrieve()
                 .onStatus(
-                        HttpStatusCode::is4xxClientError,
+                        status -> status.is4xxClientError(),
                         getClientResponseMonoDataException()
                 )
                 .onStatus(
-                        HttpStatusCode::is5xxServerError,
+                        status -> status.is5xxServerError(),
                         getClientResponseMonoServerException()
                 )
-                .bodyToFlux(MarketChart.class)
+                .bodyToMono(MarketChart.class)
                 .doOnError(
                         ManageExceptionCoinGeckoServiceApi::throwServiceException
                 );
