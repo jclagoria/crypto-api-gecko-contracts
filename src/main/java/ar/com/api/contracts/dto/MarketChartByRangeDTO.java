@@ -3,6 +3,8 @@ package ar.com.api.contracts.dto;
 import lombok.Builder;
 import lombok.Getter;
 
+import java.util.Optional;
+
 @Getter
 @Builder
 public class MarketChartByRangeDTO implements IFilterDTO {
@@ -12,15 +14,18 @@ public class MarketChartByRangeDTO implements IFilterDTO {
     private String vsCurrency;
     private String fromDate;
     private String toDate;
+    private Optional<String> precision;
 
     @Override
     public String getUrlFilterService() {
 
-        String urlServicBuilder = "/?vs_currency=" + vsCurrency +
-                "&from=" + fromDate +
-                "&to=" + toDate;
+        StringBuilder urlBuilder = new StringBuilder();
+        urlBuilder.append("?vs_currency=").append(vsCurrency)
+                .append("&from=").append(fromDate)
+                .append("&to=").append(toDate)
+                .append("&precision=").append(precision.orElse("18"));
 
-        return urlServicBuilder;
+        return urlBuilder.toString();
     }
 
 }

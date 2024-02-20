@@ -85,7 +85,7 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 );
     }
 
-    public Flux<MarketChart> getContravtAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
+    public Flux<MarketChart> getContractAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
 
         String urlService = String.format(
                 URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API,
