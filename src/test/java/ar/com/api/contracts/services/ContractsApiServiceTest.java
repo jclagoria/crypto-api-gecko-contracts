@@ -10,6 +10,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.testng.annotations.AfterMethod;
@@ -55,7 +56,7 @@ public class ContractsApiServiceTest {
 
     @AfterMethod
     void resetMocks() {
-        reset(webClientMock, responseSpecMock);
+        reset(webClientMock, responseSpecMock, externalServerConfigMock);
     }
 
     @Test()
@@ -80,8 +81,11 @@ public class ContractsApiServiceTest {
     @Test()
     void testGetAssertPlatformAddressById_handle400BadRequestError() {
         ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
-        WebClientResponseException exceptionMock = new WebClientResponseException
-                ("Bad Request", 400, null, null, null, null);
+        WebClientResponseException exceptionMock = WebClientResponseException.BadRequest
+                .create(HttpStatus.BAD_REQUEST,
+                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
+                        null, null, null, null);
+
         when(responseSpecMock.bodyToMono(AssertPlatformAddressById.class))
                 .thenReturn(Mono.error(exceptionMock));
 
@@ -99,8 +103,11 @@ public class ContractsApiServiceTest {
     @Test()
     void testGetAssertPlatformAddressById_handle500InternalServerError() {
         ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
-        WebClientResponseException exception5xxMock = new WebClientResponseException
-                ("Internal Server Error", 500, null, null, null, null);
+        WebClientResponseException exception5xxMock = WebClientResponseException
+                .InternalServerError.create(HttpStatus.INTERNAL_SERVER_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                        null, null,
+                        null, null);
 
         when(responseSpecMock.bodyToMono(AssertPlatformAddressById.class))
                 .thenReturn(Mono.error(exception5xxMock));
@@ -137,5 +144,50 @@ public class ContractsApiServiceTest {
 
         verify(webClientMock).get();
     }
+
+    @Test
+    void testGetContractAddressMarketChartById_handle4XXBadRequestError() {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        WebClientResponseException exceptionMock = WebClientResponseException.BadRequest
+                .create(HttpStatus.BAD_REQUEST,
+                        HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.getReasonPhrase(),
+                        null, null, null, null);
+
+        when(responseSpecMock.bodyToMono(MarketChart.class))
+                .thenReturn(Mono.error(exceptionMock));
+
+        Mono<MarketChart> actualError4xx = contractsApiServiceMock
+                .getContractAddressMarketChartById(filterDTO);
+
+        actualError4xx.subscribe(
+                actualObject -> {},
+                error -> {
+                    assert error.getMessage().equals("Bad Request") : "The error message does not match.";
+                });
+    }
+
+    @Test
+    void testGetContractAddressMarketChartById_handle5XXInternalServerError() {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        WebClientResponseException exceptionMock = WebClientResponseException.InternalServerError
+                .create(HttpStatus.INTERNAL_SERVER_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                        null, null, null, null);
+
+        when(responseSpecMock.bodyToMono(MarketChart.class))
+                .thenReturn(Mono.error(exceptionMock));
+
+        Mono<MarketChart> actualError5xx = contractsApiServiceMock
+                .getContractAddressMarketChartById(filterDTO);
+
+        actualError5xx.subscribe(
+                actualObject -> {},
+                error -> {
+                    assert error.getMessage()
+                            .equals("Internal Server Error") : "The error message does not match.";
+                });
+    }
+
+
 
 }

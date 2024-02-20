@@ -161,7 +161,7 @@ public class ContractApiHandlerTest {
         when(serverRequest.queryParam("vsCurrency")).thenReturn(Optional.of("usd"));
         when(serverRequest.queryParam("precision")).thenReturn(Optional.empty());
 
-        WebClientResponseException expectedException = WebClientResponseException.BadRequest
+        WebClientResponseException expectedException = WebClientResponseException.InternalServerError
                 .create(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "Internal Server Error",

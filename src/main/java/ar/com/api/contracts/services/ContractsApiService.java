@@ -85,10 +85,10 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 );
     }
 
-    public Flux<MarketChart> getContractAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
+    public Mono<MarketChart> getContractAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
 
         String urlService = String.format(
-                URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API,
+                externalServerConfig.getContractAddressByIdMarketChartByRange() + filterDto.getUrlFilterService(),
                 filterDto.getId(),
                 filterDto.getContractAddress());
 
@@ -97,14 +97,14 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .uri(urlService + filterDto.getUrlFilterService())
                 .retrieve()
                 .onStatus(
-                        HttpStatusCode::is4xxClientError,
+                        stats -> stats.is4xxClientError(),
                         getClientResponseMonoDataException()
                 )
                 .onStatus(
-                        HttpStatusCode::is5xxServerError,
+                        status -> status.is5xxServerError(),
                         getClientResponseMonoServerException()
                 )
-                .bodyToFlux(MarketChart.class)
+                .bodyToMono(MarketChart.class)
                 .doOnError(
                         ManageExceptionCoinGeckoServiceApi::throwServiceException
                 );
