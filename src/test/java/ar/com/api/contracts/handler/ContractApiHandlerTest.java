@@ -1,6 +1,7 @@
 package ar.com.api.contracts.handler;
 
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
@@ -171,13 +172,62 @@ public class ContractApiHandlerTest {
         when(contractsApiService.getContractAddressMarketChartById(any(MarketChartDTO.class)))
                 .thenReturn(Mono.error(expectedException));
 
-        Mono<ServerResponse> responseApiService = contractApiHandler.getContractAddressMarketChartById(serverRequest);
+        Mono<ServerResponse> responseApiService = contractApiHandler
+                .getContractAddressMarketChartById(serverRequest);
         responseApiService.subscribe(
                 actualObject -> {},
                 error -> {
                     assert error.getMessage()
                             .equals("Internal Server Error") : "The error message does not match.";
                 });
+    }
+
+    @Test
+    public void getContractAddressMarketChartByIdAndRange_success() {
+        when(serverRequest.pathVariable("id")).thenReturn("testId");
+        when(serverRequest.pathVariable("contractAddress")).thenReturn("testAddress");
+        when(serverRequest.queryParam("vsCurrency")).thenReturn(Optional.of("usd"));
+        when(serverRequest.queryParam("fromDate")).thenReturn(Optional.of("1392577232"));
+        when(serverRequest.queryParam("toDate")).thenReturn(Optional.of("1422577232"));
+        when(serverRequest.queryParam("precision")).thenReturn(Optional.empty());
+
+        MarketChart marketChartByRangeMock = Instancio.create(MarketChart.class);
+        when(contractsApiService.getContractAddressMarketChartByIdAndRange(any(MarketChartByRangeDTO.class)))
+                .thenReturn(Mono.just(marketChartByRangeMock));
+
+        Mono<ServerResponse> responseMonoActual = contractApiHandler
+                .getContractAddressMarketChartByIdAndRange(serverRequest);
+        ServerResponse response = responseMonoActual.block();
+        assertEquals(response.statusCode(), HttpStatus.OK);
+    }
+
+    @Test
+    public void getContractAddressMarketChartByIdAndRange_badRequestError() {
+        when(serverRequest.pathVariable("id")).thenReturn("testId");
+        when(serverRequest.pathVariable("contractAddress")).thenReturn("testAddress");
+        when(serverRequest.queryParam("vsCurrency")).thenReturn(Optional.of("usd"));
+        when(serverRequest.queryParam("fromDate")).thenReturn(Optional.of("1392577232"));
+        when(serverRequest.queryParam("toDate")).thenReturn(Optional.of("1422577232"));
+        when(serverRequest.queryParam("precision")).thenReturn(Optional.empty());
+
+        WebClientResponseException expectedException = WebClientResponseException.BadRequest
+                .create(HttpStatus.BAD_REQUEST,
+                        "Bad Request",
+                        null, null, null, null);
+
+        when(contractsApiService.getContractAddressMarketChartByIdAndRange(any(MarketChartByRangeDTO.class)))
+                .thenReturn(Mono.error(expectedException));
+
+        Mono<ServerResponse> responseApiHandler = contractApiHandler
+                .getContractAddressMarketChartByIdAndRange(serverRequest);
+
+        responseApiHandler.subscribe(
+                actualObject -> {},
+                error -> {
+                    assert error.getMessage()
+                            .equals("Bad Request") : "The error message does not match.";
+                });
+
     }
 
 }

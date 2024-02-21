@@ -32,11 +32,13 @@ public class ContractValidation {
                     Mono.just(true);
     }
 
-    public static Mono<Boolean> validateGetContractAddressMarketChartByIdAndRange(String idAsset,
-                                                                                  String contractAddress,
-                                                                                  String vsCurrency,
-                                                                                  String dateFrom,
-                                                                                  String dateTo) {
+    public static Mono<Boolean> validateGetContractAddressMarketChartByIdAndRange(ServerRequest sRequest) {
+
+        String idAsset = sRequest.pathVariable("id");
+        String contractAddress = sRequest.pathVariable("contractAddress");
+        String vsCurrency = sRequest.queryParam("vsCurrency").orElse("");
+        String dateFrom = sRequest.queryParam("fromDate").orElse("");
+        String dateTo  = sRequest.queryParam("toDate").orElse("");
 
         return validateIdAssetAndContractAddressParameters(idAsset, contractAddress) &&
                 validateParameterCurrency(vsCurrency) &&

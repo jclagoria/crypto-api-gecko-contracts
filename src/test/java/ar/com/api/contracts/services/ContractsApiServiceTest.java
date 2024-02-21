@@ -2,24 +2,18 @@ package ar.com.api.contracts.services;
 
 import ar.com.api.contracts.configuration.ExternalServerConfig;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
 import org.instancio.Instancio;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.Mockito;
-import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.stream.Collectors;
 
 import static org.mockito.Mockito.*;
 
@@ -30,7 +24,6 @@ public class ContractsApiServiceTest {
     private WebClient.ResponseSpec responseSpecMock;
 
     private ExternalServerConfig externalServerConfigMock;
-
 
     private ContractsApiService contractsApiServiceMock;
 
@@ -47,9 +40,12 @@ public class ContractsApiServiceTest {
         when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
         when(responseSpecMock.onStatus(any(), any())).thenReturn(responseSpecMock);
 
-        when(externalServerConfigMock.getContractAddressById()).thenReturn("/idValue/contract/contractAddress");
+        when(externalServerConfigMock.getContractAddressById())
+                .thenReturn("/id/contract/contractAddress");
         when(externalServerConfigMock.getContractAddressByIdMarketChart())
-                .thenReturn("/idValue/contract/contractAddress/marketChart/");
+                .thenReturn("/id/contract/contractAddress/marketChart/");
+        when(externalServerConfigMock.getContractAddressByIdMarketChartByRange())
+                .thenReturn("id/contract/contractAddress/market_chart/range");
 
         contractsApiServiceMock = new ContractsApiService(webClientMock, externalServerConfigMock);
     }
@@ -95,7 +91,8 @@ public class ContractsApiServiceTest {
         actualError4xx.subscribe(
                 actualObject -> {},
                 error -> {
-                    assert error.getMessage().equals("Bad Request") : "The error message does not match.";
+                    assert error.getMessage().equals("400 Bad Request") :
+                            "The error message does not match.";
                 });
 
     }
@@ -118,7 +115,8 @@ public class ContractsApiServiceTest {
         actualError5xx.subscribe(
                 actualObject -> {},
                 error -> {
-                    assert error.getMessage().equals("Internal Server Error") : "The error message does not match.";
+                    assert error.getMessage().equals("500 Internal Server Error") :
+                            "The error message does not match.";
                 }
         );
 
@@ -150,7 +148,7 @@ public class ContractsApiServiceTest {
         MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
         WebClientResponseException exceptionMock = WebClientResponseException.BadRequest
                 .create(HttpStatus.BAD_REQUEST,
-                        HttpStatus.BANDWIDTH_LIMIT_EXCEEDED.getReasonPhrase(),
+                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
                         null, null, null, null);
 
         when(responseSpecMock.bodyToMono(MarketChart.class))
@@ -162,7 +160,7 @@ public class ContractsApiServiceTest {
         actualError4xx.subscribe(
                 actualObject -> {},
                 error -> {
-                    assert error.getMessage().equals("Bad Request") : "The error message does not match.";
+                    assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
                 });
     }
 
@@ -184,10 +182,75 @@ public class ContractsApiServiceTest {
                 actualObject -> {},
                 error -> {
                     assert error.getMessage()
-                            .equals("Internal Server Error") : "The error message does not match.";
+                            .equals("500 Internal Server Error") : "The error message does not match.";
                 });
     }
 
+    @Test
+    void testGetContractAddressMarketChartByIdAndRange_returnObjectSuccessfully() {
+
+        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+        MarketChart expectedObject = Instancio.create(MarketChart.class);
+        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.just(expectedObject));
+
+        Mono<MarketChart> actualObject = contractsApiServiceMock
+                .getContractAddressMarketChartByIdAndRange(filterDTO);
+
+        actualObject.subscribe(object -> {
+            assert object.equals(expectedObject) :
+                    "The received AddressMarketChartByIdAndRange does not match the expected one.";
+            assert !object.getMarketCaps().isEmpty();
+            assert object.getMarketCaps().size() == object.getMarketCaps().size();
+            assert object.getPrices().get(0) == object.getPrices().get(0);
+            assert object.getTotalVolumes() != null && !object.getTotalVolumes().isEmpty();
+        });
+
+        verify(webClientMock).get();
+
+    }
+
+    @Test
+    void testGetContractAddressMarketChartByIdAndRange_handle4XXBadRequestError() {
+        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+        WebClientResponseException expected4xxException = WebClientResponseException
+                .BadRequest
+                .create(HttpStatus.BAD_REQUEST,
+                        "Bad Request",
+                        null, null, null, null);
+        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.error(expected4xxException));
+
+        Mono<MarketChart> actualObject = contractsApiServiceMock
+                .getContractAddressMarketChartByIdAndRange(filterDTO);
+
+        actualObject.subscribe(
+                object -> {},
+                error -> {
+                    assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
+                });
+
+    }
+
+    @Test
+    void testGetContractAddressMarketChartByIdAndRange_handle5XXInternalServerError() {
+        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+        WebClientResponseException expected4xxException = WebClientResponseException
+                .InternalServerError
+                .create(HttpStatus.INTERNAL_SERVER_ERROR,
+                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
+                        null, null, null, null);
+        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.error(expected4xxException));
+
+        Mono<MarketChart> actualObject = contractsApiServiceMock
+                .getContractAddressMarketChartByIdAndRange(filterDTO);
+
+        actualObject.subscribe(
+                object -> {},
+                error -> {
+                    assert error.getMessage().equals("500 Internal Server Error") :
+                            "The error message does not match.";
+                });
+
+    }
 
 
 }

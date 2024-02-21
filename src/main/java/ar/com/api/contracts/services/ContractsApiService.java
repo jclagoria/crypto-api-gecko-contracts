@@ -8,11 +8,8 @@ import ar.com.api.contracts.exception.ManageExceptionCoinGeckoServiceApi;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -21,9 +18,6 @@ public class ContractsApiService extends CoinGeckoServiceApi {
 
     private final WebClient wClient;
     private final ExternalServerConfig externalServerConfig;
-
-    @Value("${api.contractAddressByIdMarketChartByRange}")
-    private String URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API;
 
     public ContractsApiService(WebClient webClient, ExternalServerConfig eServerConfig) {
         this.wClient = webClient;
@@ -91,6 +85,8 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 externalServerConfig.getContractAddressByIdMarketChartByRange() + filterDto.getUrlFilterService(),
                 filterDto.getId(),
                 filterDto.getContractAddress());
+
+        log.info("Calling method: {}",  urlService + filterDto.getUrlFilterService());
 
         return wClient
                 .get()
