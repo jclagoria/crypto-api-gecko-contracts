@@ -4,26 +4,21 @@ import ar.com.api.contracts.configuration.ExternalServerConfig;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
 import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
-import ar.com.api.contracts.exception.ManageExceptionCoinGeckoServiceApi;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
+import ar.com.api.contracts.services.utils.ErrorHandlerUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class ContractsApiService extends CoinGeckoServiceApi {
+public class ContractsApiService {
 
     private final WebClient wClient;
     private final ExternalServerConfig externalServerConfig;
-
-    @Value("${api.contractAddressByIdMarketChartByRange}")
-    private String URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API;
 
     public ContractsApiService(WebClient webClient, ExternalServerConfig eServerConfig) {
         this.wClient = webClient;
@@ -34,7 +29,7 @@ public class ContractsApiService extends CoinGeckoServiceApi {
 
         String urlServiceApi = String.format(
                 externalServerConfig.getContractAddressById(),
-                filterDto.getIdCoin(),
+                filterDto.getId(),
                 filterDto.getContractAddress());
 
         log.info("Calling method: {}", urlServiceApi);
@@ -45,16 +40,14 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(AssertPlatformAddressById.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(AssertPlatformAddressById.class);
+
 
     }
 
@@ -73,41 +66,37 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(MarketChart.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(MarketChart.class);
     }
 
-    public Flux<MarketChart> getContravtAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
+    public Mono<MarketChart> getContractAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
 
         String urlService = String.format(
-                URL_CONTRACT_ADDRESS_MARKET_CHART_RANGE_API,
+                externalServerConfig.getContractAddressByIdMarketChartByRange() + filterDto.getUrlFilterService(),
                 filterDto.getId(),
                 filterDto.getContractAddress());
+
+        log.info("Calling method: {}",  urlService + filterDto.getUrlFilterService());
 
         return wClient
                 .get()
                 .uri(urlService + filterDto.getUrlFilterService())
                 .retrieve()
                 .onStatus(
-                        HttpStatusCode::is4xxClientError,
-                        getClientResponseMonoDataException()
+                        stats -> stats.is4xxClientError(),
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
-                        HttpStatusCode::is5xxServerError,
-                        getClientResponseMonoServerException()
+                        status -> status.is5xxServerError(),
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToFlux(MarketChart.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(MarketChart.class);
 
     }
 

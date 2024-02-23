@@ -7,7 +7,7 @@ coins:
   healthAPI: '/health-api'
   contractAddressId: '/{id}/contract/{contractAddress}'
   contractAddressByIdMarketChart: '/{id}/contract/{contractAddress}/marketChart/'
-  contractAddressByIdMarketChartByRange: '/{id}/contract/{contractAddress}/marketChart/range/'
+  contractAddressByIdMarketChartByRange: '/{id}/contract/{contractAddress}/marketChart/range'
 
 ## Url Coin Gecko RestService
 api:

@@ -1,18 +1,17 @@
 package ar.com.api.contracts.services;
 
 import ar.com.api.contracts.configuration.ExternalServerConfig;
-import ar.com.api.contracts.exception.ManageExceptionCoinGeckoServiceApi;
-import org.springframework.beans.factory.annotation.Value;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
+import ar.com.api.contracts.model.Ping;
+import ar.com.api.contracts.services.utils.ErrorHandlerUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
-
-import ar.com.api.contracts.model.Ping;
-import lombok.extern.slf4j.Slf4j;
 import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class CoinGeckoServiceStatus extends CoinGeckoServiceApi {
+public class CoinGeckoServiceStatus {
 
     private final ExternalServerConfig externalServerConfig;
 
@@ -33,16 +32,13 @@ public class CoinGeckoServiceStatus extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(Ping.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(Ping.class);
     }
 
 }
