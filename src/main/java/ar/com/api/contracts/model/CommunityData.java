@@ -1,11 +1,10 @@
 package ar.com.api.contracts.model;
 
-import java.io.Serializable;
-
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import lombok.Data;
+
+import java.io.Serializable;
 
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)

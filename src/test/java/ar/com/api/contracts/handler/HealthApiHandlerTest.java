@@ -1,6 +1,6 @@
 package ar.com.api.contracts.handler;
 
-import ar.com.api.contracts.handler.HealthApiHandler;
+import ar.com.api.contracts.exception.ApiCustomException;
 import ar.com.api.contracts.model.Ping;
 import ar.com.api.contracts.services.CoinGeckoServiceStatus;
 import org.instancio.Instancio;
@@ -11,12 +11,15 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
+import org.testng.annotations.AfterMethod;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import reactor.core.publisher.Mono;
 
-import static org.mockito.Mockito.*;
-import static org.testng.Assert.*;
+import static org.mockito.Mockito.reset;
+import static org.mockito.Mockito.when;
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.fail;
 
 public class HealthApiHandlerTest {
 
@@ -34,7 +37,12 @@ public class HealthApiHandlerTest {
         MockitoAnnotations.openMocks(this);
     }
 
-    @Test(priority = 1)
+    @AfterMethod
+    public void resetMocks() {
+        reset(serviceStatus, serverRequest);
+    }
+
+    @Test
     public void getStatusServiceCoinGecko_Success() {
         Ping expectedPing = Instancio.create(Ping.class);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.just(expectedPing));
@@ -46,34 +54,45 @@ public class HealthApiHandlerTest {
         });
     }
 
-    @Test(priority = 2)
+    @Test
     public void getStatusServiceCoinGecko_ClientError() {
-        WebClientResponseException exception = new WebClientResponseException(
-                "Bad Request", 400, "Bad Request", null, null, null, null);
+        WebClientResponseException exception = WebClientResponseException.BadRequest.create(
+                        HttpStatus.BAD_REQUEST.value(),
+                        "Bad Request",
+                        null, null, null,null);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
 
         Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
 
-        responseMono.subscribe(response -> {
-            assertEquals(response.statusCode().value(), 400);
-        }, error -> {
-            fail("Expected WebClientResponseException to be handled, but it was not.");
-        });
+        responseMono.subscribe(
+                responseObject -> {},
+                error -> {
+                    assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
+                    assert error.getMessage()
+                            .equals("An expected error occurred in getStatusServiceCoinGecko") :
+                            "The error message does not match.";
+                });
     }
 
-    @Test(priority = 3)
+    @Test
     public void getStatusServiceCoinGecko_ServerError() {
-        WebClientResponseException exception = new WebClientResponseException(
-                "Bad Request", 400, "Bad Request", null, null, null, null);
+        WebClientResponseException exception = WebClientResponseException
+                .BadRequest.create(
+                        HttpStatus.INTERNAL_SERVER_ERROR,
+                        "Internal Server Error",
+                        null, null, null,null);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
 
         Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
 
-        responseMono.subscribe(response -> {
-            assertEquals(response.statusCode().value(), 500);
-        }, error -> {
-            fail("Expected WebClientResponseException to be handled, but it was not.");
-        });
+        responseMono.subscribe(
+                responseObject -> {},
+                error -> {
+                    assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
+                    assert error.getMessage()
+                            .equals("An expected error occurred in getStatusServiceCoinGecko") :
+                            "The error message does not match.";
+                });
 
     }
 

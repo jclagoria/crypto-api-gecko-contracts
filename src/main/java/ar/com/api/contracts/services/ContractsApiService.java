@@ -4,9 +4,10 @@ import ar.com.api.contracts.configuration.ExternalServerConfig;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
 import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
-import ar.com.api.contracts.exception.ManageExceptionCoinGeckoServiceApi;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
+import ar.com.api.contracts.services.utils.ErrorHandlerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -14,7 +15,7 @@ import reactor.core.publisher.Mono;
 
 @Service
 @Slf4j
-public class ContractsApiService extends CoinGeckoServiceApi {
+public class ContractsApiService {
 
     private final WebClient wClient;
     private final ExternalServerConfig externalServerConfig;
@@ -28,7 +29,7 @@ public class ContractsApiService extends CoinGeckoServiceApi {
 
         String urlServiceApi = String.format(
                 externalServerConfig.getContractAddressById(),
-                filterDto.getIdCoin(),
+                filterDto.getId(),
                 filterDto.getContractAddress());
 
         log.info("Calling method: {}", urlServiceApi);
@@ -39,16 +40,14 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(AssertPlatformAddressById.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(AssertPlatformAddressById.class);
+
 
     }
 
@@ -67,16 +66,13 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         status -> status.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(MarketChart.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(MarketChart.class);
     }
 
     public Mono<MarketChart> getContractAddressMarketChartByIdAndRange(MarketChartByRangeDTO filterDto) {
@@ -94,16 +90,13 @@ public class ContractsApiService extends CoinGeckoServiceApi {
                 .retrieve()
                 .onStatus(
                         stats -> stats.is4xxClientError(),
-                        getClientResponseMonoDataException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
                 )
                 .onStatus(
                         status -> status.is5xxServerError(),
-                        getClientResponseMonoServerException()
+                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
                 )
-                .bodyToMono(MarketChart.class)
-                .doOnError(
-                        ManageExceptionCoinGeckoServiceApi::throwServiceException
-                );
+                .bodyToMono(MarketChart.class);
 
     }
 
