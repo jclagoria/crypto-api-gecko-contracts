@@ -58,7 +58,7 @@ public class ContractsApiService {
                 filterDto.getId(),
                 filterDto.getContractAddress());
 
-        log.info("Calling method: {}",  urlService + filterDto.getUrlFilterService());
+        log.info("Calling method: {}", urlService + filterDto.getUrlFilterService());
 
         return wClient
                 .get()
@@ -82,7 +82,7 @@ public class ContractsApiService {
                 filterDto.getId(),
                 filterDto.getContractAddress());
 
-        log.info("Calling method: {}",  urlService + filterDto.getUrlFilterService());
+        log.info("Calling method: {}", urlService + filterDto.getUrlFilterService());
 
         return wClient
                 .get()

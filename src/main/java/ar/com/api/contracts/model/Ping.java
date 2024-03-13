@@ -7,8 +7,8 @@ import lombok.Data;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Ping {
- 
- @JsonProperty("gecko_says")
- private String geckoSays;
+
+    @JsonProperty("gecko_says")
+    private String geckoSays;
 
 }

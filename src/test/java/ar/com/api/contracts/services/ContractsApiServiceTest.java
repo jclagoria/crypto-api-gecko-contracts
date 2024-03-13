@@ -89,7 +89,8 @@ public class ContractsApiServiceTest {
                 .getAssertPlatformAddressById(filterDTO);
 
         actualError4xx.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage().equals("400 Bad Request") :
                             "The error message does not match.";
@@ -113,7 +114,8 @@ public class ContractsApiServiceTest {
                 .getAssertPlatformAddressById(filterDTO);
 
         actualError5xx.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage().equals("500 Internal Server Error") :
                             "The error message does not match.";
@@ -158,7 +160,8 @@ public class ContractsApiServiceTest {
                 .getContractAddressMarketChartById(filterDTO);
 
         actualError4xx.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
                 });
@@ -179,7 +182,8 @@ public class ContractsApiServiceTest {
                 .getContractAddressMarketChartById(filterDTO);
 
         actualError5xx.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("500 Internal Server Error") : "The error message does not match.";
@@ -223,7 +227,8 @@ public class ContractsApiServiceTest {
                 .getContractAddressMarketChartByIdAndRange(filterDTO);
 
         actualObject.subscribe(
-                object -> {},
+                object -> {
+                },
                 error -> {
                     assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
                 });
@@ -244,7 +249,8 @@ public class ContractsApiServiceTest {
                 .getContractAddressMarketChartByIdAndRange(filterDTO);
 
         actualObject.subscribe(
-                object -> {},
+                object -> {
+                },
                 error -> {
                     assert error.getMessage().equals("500 Internal Server Error") :
                             "The error message does not match.";

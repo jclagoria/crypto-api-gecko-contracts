@@ -9,16 +9,16 @@ import java.io.Serializable;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AssertPlatformBase implements Serializable {
- 
- private static final long serialVersionUID = 1L;
 
- @JsonProperty("id")
- private String id;
+    private static final long serialVersionUID = 1L;
 
- @JsonProperty("symbol")
- private String symbol;
+    @JsonProperty("id")
+    private String id;
 
- @JsonProperty("asset_platform_id")
- private String assetPlatformId;
+    @JsonProperty("symbol")
+    private String symbol;
+
+    @JsonProperty("asset_platform_id")
+    private String assetPlatformId;
 
 }

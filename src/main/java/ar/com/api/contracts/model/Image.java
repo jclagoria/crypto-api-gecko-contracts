@@ -9,14 +9,14 @@ import java.io.Serializable;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Image implements Serializable {
- 
- @JsonProperty("thumb")
- private String thumb;
 
- @JsonProperty("small")
- private String small;
+    @JsonProperty("thumb")
+    private String thumb;
 
- @JsonProperty("large")
- private String large;
+    @JsonProperty("small")
+    private String small;
+
+    @JsonProperty("large")
+    private String large;
 
 }

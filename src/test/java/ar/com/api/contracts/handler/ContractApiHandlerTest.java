@@ -81,7 +81,7 @@ public class ContractApiHandlerTest {
                 .BadRequest.create(
                         HttpStatus.BAD_REQUEST.value(),
                         "Bad Request",
-                        null, null, null,null);
+                        null, null, null, null);
         when(validatorMock.validation(any(ContractAddressByIdFilterDTO.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(contractsApiService.getAssertPlatformAddressById(any(ContractAddressByIdFilterDTO.class)))
@@ -90,7 +90,8 @@ public class ContractApiHandlerTest {
         Mono<ServerResponse> actualObject = contractApiHandler.getContractAddressById(serverRequest);
 
         actualObject.subscribe(
-                responseObject -> {},
+                responseObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("400 Bad Request") : "The error message does not match.";
@@ -107,7 +108,7 @@ public class ContractApiHandlerTest {
                 .BadRequest.create(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "Internal Server Error",
-                        null, null, null,null);
+                        null, null, null, null);
         when(validatorMock.validation(any(ContractAddressByIdFilterDTO.class)))
                 .thenAnswer(invocation -> Mono.just(invocation.getArgument(0)));
         when(contractsApiService.getAssertPlatformAddressById(any(ContractAddressByIdFilterDTO.class))).thenReturn(Mono.error(expectedException));
@@ -115,7 +116,8 @@ public class ContractApiHandlerTest {
         Mono<ServerResponse> actualObject = contractApiHandler.getContractAddressById(serverRequest);
 
         actualObject.subscribe(
-                responseObject -> {},
+                responseObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("500 Internal Server Error") : "The error message does not match.";
@@ -164,7 +166,8 @@ public class ContractApiHandlerTest {
 
         Mono<ServerResponse> responseApiService = contractApiHandler.getContractAddressMarketChartById(serverRequest);
         responseApiService.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("Bad Request") : "The error message does not match.";
@@ -193,7 +196,8 @@ public class ContractApiHandlerTest {
         Mono<ServerResponse> responseApiService = contractApiHandler
                 .getContractAddressMarketChartById(serverRequest);
         responseApiService.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("Internal Server Error") : "The error message does not match.";
@@ -246,7 +250,8 @@ public class ContractApiHandlerTest {
                 .getContractAddressMarketChartByIdAndRange(serverRequest);
 
         responseApiHandler.subscribe(
-                actualObject -> {},
+                actualObject -> {
+                },
                 error -> {
                     assert error.getMessage()
                             .equals("Bad Request") : "The error message does not match.";

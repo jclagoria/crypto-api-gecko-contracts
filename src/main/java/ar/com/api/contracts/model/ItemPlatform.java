@@ -9,11 +9,11 @@ import java.io.Serializable;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ItemPlatform implements Serializable {
- 
- @JsonProperty("decimal_place")
- private long decimalPlace;
 
- @JsonProperty("contract_address")
- private String contractAddress;
+    @JsonProperty("decimal_place")
+    private long decimalPlace;
+
+    @JsonProperty("contract_address")
+    private String contractAddress;
 
 }

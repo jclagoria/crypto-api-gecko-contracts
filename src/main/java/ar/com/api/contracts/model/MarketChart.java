@@ -11,13 +11,13 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class MarketChart implements Serializable {
 
- @JsonProperty("prices")
- private List<List<String>> prices;
+    @JsonProperty("prices")
+    private List<List<String>> prices;
 
- @JsonProperty("market_caps")
- private List<List<String>> marketCaps;
+    @JsonProperty("market_caps")
+    private List<List<String>> marketCaps;
 
- @JsonProperty("total_volumes")
- private List<List<String>> totalVolumes;
+    @JsonProperty("total_volumes")
+    private List<List<String>> totalVolumes;
 
 }

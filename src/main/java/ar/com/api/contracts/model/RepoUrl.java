@@ -10,11 +10,11 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RepoUrl implements Serializable {
- 
- @JsonProperty("github")
- private List<String> github;
 
- @JsonProperty("bitbucket")
- private List<String> bitbucket;
+    @JsonProperty("github")
+    private List<String> github;
+
+    @JsonProperty("bitbucket")
+    private List<String> bitbucket;
 
 }

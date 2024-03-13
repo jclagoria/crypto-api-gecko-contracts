@@ -19,7 +19,6 @@ import reactor.core.publisher.Mono;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.when;
 import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
 
 public class HealthApiHandlerTest {
 
@@ -57,15 +56,16 @@ public class HealthApiHandlerTest {
     @Test
     public void getStatusServiceCoinGecko_ClientError() {
         WebClientResponseException exception = WebClientResponseException.BadRequest.create(
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Bad Request",
-                        null, null, null,null);
+                HttpStatus.BAD_REQUEST.value(),
+                "Bad Request",
+                null, null, null, null);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
 
         Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
 
         responseMono.subscribe(
-                responseObject -> {},
+                responseObject -> {
+                },
                 error -> {
                     assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
                     assert error.getMessage()
@@ -80,13 +80,14 @@ public class HealthApiHandlerTest {
                 .BadRequest.create(
                         HttpStatus.INTERNAL_SERVER_ERROR,
                         "Internal Server Error",
-                        null, null, null,null);
+                        null, null, null, null);
         when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
 
         Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
 
         responseMono.subscribe(
-                responseObject -> {},
+                responseObject -> {
+                },
                 error -> {
                     assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
                     assert error.getMessage()

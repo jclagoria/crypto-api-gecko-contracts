@@ -44,7 +44,7 @@ public class ContractApiHandler {
                 );
     }
 
-    public Mono<ServerResponse> getContractAddressMarketChartById (ServerRequest sRequest){
+    public Mono<ServerResponse> getContractAddressMarketChartById(ServerRequest sRequest) {
 
         log.info("Fetching Contract Address Market Chart by Id from CoinGecko API");
 
@@ -66,7 +66,7 @@ public class ContractApiHandler {
                 );
     }
 
-    public Mono<ServerResponse> getContractAddressMarketChartByIdAndRange (ServerRequest sRequest){
+    public Mono<ServerResponse> getContractAddressMarketChartByIdAndRange(ServerRequest sRequest) {
 
         log.info("Fetching Contract Address Market Chart by Id and Range from CoinGecko API");
 

@@ -33,7 +33,6 @@ public class MarketChartByRangeDTO extends CommonFilterDTO implements IFilterDTO
     }
 
 
-
     @Override
     public String getUrlFilterService() {
 

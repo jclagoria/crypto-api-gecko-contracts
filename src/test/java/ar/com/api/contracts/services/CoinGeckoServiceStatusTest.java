@@ -12,6 +12,7 @@ import org.testng.annotations.Test;
 import reactor.core.publisher.Mono;
 
 import static org.mockito.Mockito.*;
+
 public class CoinGeckoServiceStatusTest {
 
     @Mock
