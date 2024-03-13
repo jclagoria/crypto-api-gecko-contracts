@@ -3,13 +3,14 @@ package ar.com.api.contracts.exception;
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
 
+@Getter
 public class ApiCustomException extends RuntimeException {
 
-    @Getter
-    private final HttpStatus status;
+    private final HttpStatus httpStatus;
 
-    public ApiCustomException(String message, HttpStatus hStatus) {
+    public ApiCustomException(String message, HttpStatus status) {
         super(message);
-        this.status = hStatus;
+        this.httpStatus = status;
     }
+
 }

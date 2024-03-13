@@ -1,12 +1,10 @@
 package ar.com.api.contracts.services;
 
 import ar.com.api.contracts.configuration.ExternalServerConfig;
-import ar.com.api.contracts.enums.ErrorTypeEnum;
+import ar.com.api.contracts.configuration.HttpServiceCall;
 import ar.com.api.contracts.model.Ping;
-import ar.com.api.contracts.services.utils.ErrorHandlerUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -15,10 +13,10 @@ public class CoinGeckoServiceStatus {
 
     private final ExternalServerConfig externalServerConfig;
 
-    private final WebClient webClient;
+    private final HttpServiceCall httpServiceCall;
 
-    public CoinGeckoServiceStatus(WebClient webClient, ExternalServerConfig eServerConfig) {
-        this.webClient = webClient;
+    public CoinGeckoServiceStatus(HttpServiceCall serviceCall, ExternalServerConfig eServerConfig) {
+        this.httpServiceCall = serviceCall;
         this.externalServerConfig = eServerConfig;
     }
 
@@ -26,19 +24,7 @@ public class CoinGeckoServiceStatus {
 
         log.info("Calling CoinGecko method {} ", externalServerConfig.getPing());
 
-        return webClient
-                .get()
-                .uri(externalServerConfig.getPing())
-                .retrieve()
-                .onStatus(
-                        status -> status.is4xxClientError(),
-                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_CLIENT_ERROR)
-                )
-                .onStatus(
-                        status -> status.is5xxServerError(),
-                        response -> ErrorHandlerUtils.handleError(response, ErrorTypeEnum.GECKO_SERVER_ERROR)
-                )
-                .bodyToMono(Ping.class);
+        return httpServiceCall.getMonoObject(externalServerConfig.getPing(), Ping.class);
     }
 
 }

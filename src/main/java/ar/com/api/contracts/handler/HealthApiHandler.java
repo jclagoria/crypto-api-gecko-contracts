@@ -1,6 +1,7 @@
 package ar.com.api.contracts.handler;
 
-import ar.com.api.contracts.exception.ApiCustomException;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
+import ar.com.api.contracts.exception.ApiClientErrorException;
 import ar.com.api.contracts.services.CoinGeckoServiceStatus;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,10 +25,12 @@ public class HealthApiHandler {
         return serviceStatus
                 .getStatusCoinGeckoService()
                 .flatMap(ping -> ServerResponse.ok().bodyValue(ping))
-                .onErrorResume(Exception.class,
-                        error -> Mono
-                                .error(new ApiCustomException("An expected error occurred in getStatusServiceCoinGecko",
-                                        HttpStatus.INTERNAL_SERVER_ERROR))
+                .onErrorResume(error ->
+                        Mono.error(
+                                new ApiClientErrorException("An expected error occurred in getStatusServiceCoinGecko",
+                                        HttpStatus.INTERNAL_SERVER_ERROR,
+                                        ErrorTypeEnum.API_SERVER_ERROR)
+                        )
                 );
     }
 }

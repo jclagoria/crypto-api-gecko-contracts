@@ -10,6 +10,7 @@ import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
@@ -22,119 +23,57 @@ import java.util.Map;
 @Slf4j
 public class GlobalApiExceptionHandler {
 
-    @ExceptionHandler(ClientErrorApiException.class)
-    public Mono<Void> handler4XXRequestException(ServerWebExchange exchange, ClientErrorApiException cApiException)
+    @ExceptionHandler(ApiClientErrorException.class)
+    public Mono<Void> handleClientErrorRequestException(ServerWebExchange serverWebExchange,
+                                                        ApiClientErrorException apiClientException)
             throws JsonProcessingException {
+        log.error("An ApiClientErrorException occurred {}", apiClientException.getMessage());
 
-        log.error("A ClientError occurred.", cApiException);
+        ServerHttpResponse response = serverWebExchange.getResponse();
+        HttpStatus status = apiClientException.getHttpStatus();
+        response.setStatusCode(status);
+        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
-        ServerHttpResponse response = exchange.getResponse();
-        HttpStatus hStatus = cApiException.getHttpStatus();
-        response.setStatusCode(hStatus);
+        ApiErrorResponse apiError = ApiErrorResponse.builder()
+                .code(status.value())
+                .message(apiClientException.getMessage())
+                .errorMessage(apiClientException.getLocalizedMessage())
+                .build();
+
+        return response.writeWith(
+                Mono.just(
+                        response.bufferFactory().wrap(new ObjectMapper()
+                                .writeValueAsBytes(apiError))
+                )
+        );
+    }
+
+    @ExceptionHandler(ApiServerErrorException.class)
+    public Mono<Void> handleServerErrorRequestException(ApiServerErrorException apiServerErrorException,
+                                                        ServerWebExchange serverWebExchange)
+            throws JsonProcessingException {
+        log.error("An ApiServerErrorException occurred {}", apiServerErrorException.getMessage());
+
+        ServerHttpResponse response = serverWebExchange.getResponse();
+        HttpStatus status = apiServerErrorException.getHttpStatus();
+        response.setStatusCode(status);
         response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
 
         ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
-                .code(hStatus.value())
-                .message(cApiException.getMessage())
+                .code(status.value())
+                .message(apiServerErrorException.getMessage())
+                .errorMessage(apiServerErrorException.getOriginalMessage())
                 .build();
 
-        return response.writeWith(Mono
-                .just(response.bufferFactory()
-                        .wrap(new ObjectMapper().writeValueAsBytes(apiErrorResponse))));
+        return response.writeWith(
+                Mono.just(
+                        response.bufferFactory().wrap(
+                                new ObjectMapper().writeValueAsBytes(apiErrorResponse)
+                        )
+                )
+        );
     }
 
-    @ExceptionHandler(ServerErrorApiException.class)
-    public Mono<Void> handler5XXRequestException(ServerWebExchange exchange, ServerErrorApiException sApiException)
-            throws JsonProcessingException {
-
-        log.error("A ServerException occurred.", sApiException);
-
-        ServerHttpResponse response = exchange.getResponse();
-        HttpStatus hStatus = sApiException.getStatus();
-
-        response.setStatusCode(hStatus);
-        response.getHeaders().setContentType(MediaType.APPLICATION_JSON);
-
-        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
-                .code(hStatus.value())
-                .message(sApiException.getMessage())
-                .build();
-
-        return response.writeWith(Mono
-                .just(response.bufferFactory()
-                        .wrap(new ObjectMapper().writeValueAsBytes(apiErrorResponse))));
-    }
-
-    @ExceptionHandler(ApiNotFoundCustomException.class)
-    public Mono<ServerResponse> handleApiNotFoundException(
-            ApiNotFoundCustomException aNotFoundCustomException,
-            ServerWebExchange exchange) {
-
-        log.error("An ApiCustomException occurred.", aNotFoundCustomException.getMessage());
-
-        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
-                .code(aNotFoundCustomException.getStatus().value())
-                .message(aNotFoundCustomException.getMessage())
-                .build();
-
-        return ServerResponse
-                .status(aNotFoundCustomException.getStatus())
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(apiErrorResponse);
-    }
-
-    @ExceptionHandler(ApiValidatorException.class)
-    public Mono<ServerResponse> handleApiValidationError(ApiValidatorException validatorException,
-                                                         ServerWebExchange webExchange) {
-        log.error("An ApiValidationError occurred {}", validatorException.getErrorMessage());
-
-        ApiErrorResponse apiErrorResponse = ApiErrorResponse
-                .builder()
-                .code(validatorException.getHttpStatus().value())
-                .message(validatorException.getMessage())
-                .errorMessage(validatorException.getErrorMessage())
-                .build();
-
-        return ServerResponse
-                .status(validatorException.getHttpStatus())
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(apiErrorResponse);
-    }
-
-    @ExceptionHandler(ApiCustomException.class)
-    public Mono<ServerResponse> handleApiCustomException(
-            ApiCustomException aCustomException,
-            ServerWebExchange exchange) {
-
-        log.error("An ApiCustomException occurred.", aCustomException.getCause());
-
-        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
-                .code(aCustomException.getStatus().value())
-                .message(aCustomException.getMessage())
-                .build();
-
-        return ServerResponse
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(apiErrorResponse);
-    }
-
-
-    @ExceptionHandler(WebClientResponseException.class)
-    public Mono<ServerResponse> handleWebClientRequestException(WebClientResponseException ex, ServerWebExchange exchange) {
-        log.error("A WebClientRequestException occurred", ex);
-
-        ApiErrorResponse apiErrorResponse = ApiErrorResponse.builder()
-                .code(HttpStatus.BAD_GATEWAY.value())
-                .message("Failed to communicate with external service.")
-                .errorMessage(ex.getMessage())
-                .build();
-
-        return ServerResponse
-                .status(HttpStatus.BAD_GATEWAY)
-                .contentType(MediaType.APPLICATION_JSON)
-                .bodyValue(apiErrorResponse);
-    }
     @ExceptionHandler(Exception.class)
     public Mono<ServerResponse> handleGeneralException(Exception ex, ServerWebExchange sWebExchange) {
         log.error("An unexpected Exception occurred", ex);
