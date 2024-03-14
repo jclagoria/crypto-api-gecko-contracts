@@ -64,12 +64,6 @@
             <artifactId>instancio-core</artifactId>
             <version>4.3.1</version>
         </dependency>
-        <dependency>
-            <groupId>org.testng</groupId>
-            <artifactId>testng</artifactId>
-            <version>7.4.0</version> <!-- Usar la versión más reciente o la que se ajuste a tus necesidades -->
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -86,7 +80,7 @@
                 <configuration>
                     <excludes>
                         <exclude>
-                            <groupId>org.projectlombok</groupId>
+                            <groupId>org.project-lombok</groupId>
                             <artifactId>lombok</artifactId>
                         </exclude>
                     </excludes>
