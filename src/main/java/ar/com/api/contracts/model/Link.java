@@ -10,38 +10,38 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Link implements Serializable {
- 
- @JsonProperty("homepage")
- private List<String> homepage;
 
- @JsonProperty("blockchain_site")
- private List<String> blockchainSite;
+    @JsonProperty("homepage")
+    private List<String> homepage;
 
- @JsonProperty("official_forum_url")
- private List<String> officialForumUrl;
+    @JsonProperty("blockchain_site")
+    private List<String> blockchainSite;
 
- @JsonProperty("chat_url")
- private List<String> chatUrl;
+    @JsonProperty("official_forum_url")
+    private List<String> officialForumUrl;
 
- @JsonProperty("announcement_url")
- private List<String> announcementUrl;
+    @JsonProperty("chat_url")
+    private List<String> chatUrl;
 
- @JsonProperty("twitter_screen_name")
- private String twitterScreenName;
+    @JsonProperty("announcement_url")
+    private List<String> announcementUrl;
 
- @JsonProperty("facebook_username")
- private String facebookUsername;
+    @JsonProperty("twitter_screen_name")
+    private String twitterScreenName;
 
- @JsonProperty("bitcointalk_thread_identifier")
- private String bitcointalkThreadIdentifier;
+    @JsonProperty("facebook_username")
+    private String facebookUsername;
 
- @JsonProperty("telegram_channel_identifier")
- private String telegramChannelIdentifier;
+    @JsonProperty("bitcointalk_thread_identifier")
+    private String bitcointalkThreadIdentifier;
 
- @JsonProperty("subreddit_url")
- private String subredditUrl;
+    @JsonProperty("telegram_channel_identifier")
+    private String telegramChannelIdentifier;
 
- @JsonProperty("repo_url")
- private RepoUrl repoUrl;
+    @JsonProperty("subreddit_url")
+    private String subredditUrl;
+
+    @JsonProperty("repo_url")
+    private RepoUrl repoUrl;
 
 }

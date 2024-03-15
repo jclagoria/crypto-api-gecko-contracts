@@ -1,6 +1,6 @@
 package ar.com.api.contracts.validators;
 
-import ar.com.api.contracts.exception.ApiValidatorException;
+import ar.com.api.contracts.exception.ApiValidationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.BeanPropertyBindingResult;
@@ -18,16 +18,18 @@ public class ValidatorOfDTOComponent {
         this.validatorAdapter = adapter;
     }
 
-    public<T> Mono<T> validation(T dto) {
+    public <T> Mono<T> validation(T dto) {
         BeanPropertyBindingResult bindingResult = new BeanPropertyBindingResult
                 (dto, dto.getClass().getName());
         validatorAdapter.validate(dto, bindingResult);
 
-        if(bindingResult.hasErrors()) {
+        if (bindingResult.hasErrors()) {
             String errorMessage = bindingResult.getAllErrors().stream()
                     .map(error -> error.getDefaultMessage())
                     .collect(Collectors.joining("; "));
-            return Mono.error(new ApiValidatorException("Validation failed", errorMessage, HttpStatus.BAD_REQUEST));
+            return Mono.error(
+                    new ApiValidationException("Validation failed", errorMessage, HttpStatus.BAD_REQUEST)
+            );
         }
 
         return Mono.just(dto);

@@ -33,15 +33,16 @@ public class MarketChartByRangeDTO extends CommonFilterDTO implements IFilterDTO
     }
 
 
-
     @Override
     public String getUrlFilterService() {
 
         StringBuilder urlBuilder = new StringBuilder();
         urlBuilder.append("?vs_currency=").append(vsCurrency)
                 .append("&from=").append(fromDate)
-                .append("&to=").append(toDate)
-                .append("&precision=").append(precision.orElse("18"));
+                .append("&to=").append(toDate);
+
+        this.precision.ifPresent(valuePrecision ->
+                urlBuilder.append("&precision=").append(valuePrecision));
 
         return urlBuilder.toString();
     }

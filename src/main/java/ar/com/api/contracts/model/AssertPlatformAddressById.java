@@ -10,95 +10,95 @@ import java.util.Map;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class AssertPlatformAddressById extends AssertPlatformBase {
- 
- @JsonProperty("platforms") 
- private Map<String, String> platforms;
 
- @JsonProperty("detail_platforms") 
- private Map<String, ItemPlatform> detailPlatforms;
+    @JsonProperty("platforms")
+    private Map<String, String> platforms;
 
- @JsonProperty("block_time_in_minutes") 
- private Long blockTimeInMinutes;
+    @JsonProperty("detail_platforms")
+    private Map<String, ItemPlatform> detailPlatforms;
 
- @JsonProperty("hashing_algorithm") 
- private String hashingAlgorithm;
+    @JsonProperty("block_time_in_minutes")
+    private Long blockTimeInMinutes;
 
- @JsonProperty("categories") 
- private List<String> categories;
+    @JsonProperty("hashing_algorithm")
+    private String hashingAlgorithm;
 
- @JsonProperty("public_notice") 
- private String publicNotice;
+    @JsonProperty("categories")
+    private List<String> categories;
 
- @JsonProperty("additional_notices") 
- private List<String> additionalNotices;
+    @JsonProperty("public_notice")
+    private String publicNotice;
 
- @JsonProperty("localization") 
- private Map<String, String> localization;
+    @JsonProperty("additional_notices")
+    private List<String> additionalNotices;
 
- @JsonProperty("description") 
- private Map<String, String> description;
+    @JsonProperty("localization")
+    private Map<String, String> localization;
 
- @JsonProperty("links") 
- private Link link;
+    @JsonProperty("description")
+    private Map<String, String> description;
 
- @JsonProperty("image") 
- private Image image;
+    @JsonProperty("links")
+    private Link link;
 
- @JsonProperty("country_origin") 
- private String countryOrigin;
+    @JsonProperty("image")
+    private Image image;
 
- @JsonProperty("genesis_date") 
- private String genesisDate;
+    @JsonProperty("country_origin")
+    private String countryOrigin;
 
- @JsonProperty("contract_address") 
- private String contractAddress;
+    @JsonProperty("genesis_date")
+    private String genesisDate;
 
- @JsonProperty("sentiment_votes_up_percentage") 
- private long sentimentVotesUpPercentage;
+    @JsonProperty("contract_address")
+    private String contractAddress;
 
- @JsonProperty("sentiment_votes_down_percentage") 
- private long sentimentVotesDownPercentage;
+    @JsonProperty("sentiment_votes_up_percentage")
+    private long sentimentVotesUpPercentage;
 
- @JsonProperty("market_cap_rank") 
- private long marketCapRank;
+    @JsonProperty("sentiment_votes_down_percentage")
+    private long sentimentVotesDownPercentage;
 
- @JsonProperty("coingecko_rank") 
- private long coingeckoRank;
+    @JsonProperty("market_cap_rank")
+    private long marketCapRank;
 
- @JsonProperty("coingecko_score") 
- private double coingeckoScore;
+    @JsonProperty("coingecko_rank")
+    private long coingeckoRank;
 
- @JsonProperty("developer_score") 
- private double developerScore;
+    @JsonProperty("coingecko_score")
+    private double coingeckoScore;
 
- @JsonProperty("community_score") 
- private double communityScore;
+    @JsonProperty("developer_score")
+    private double developerScore;
 
- @JsonProperty("liquidity_score") 
- private long liquidityScore;
+    @JsonProperty("community_score")
+    private double communityScore;
 
- @JsonProperty("public_interest_score") 
- private double publicInterestScore;
+    @JsonProperty("liquidity_score")
+    private long liquidityScore;
 
- @JsonProperty("market_data") 
- private MarketData marketData;
+    @JsonProperty("public_interest_score")
+    private double publicInterestScore;
 
- @JsonProperty("community_data") 
- private CommunityData communityData;
+    @JsonProperty("market_data")
+    private MarketData marketData;
 
- @JsonProperty("developer_data") 
- private DeveloperData developerData;
+    @JsonProperty("community_data")
+    private CommunityData communityData;
 
- @JsonProperty("public_interest_stats") 
- private PublicInterestStats publicInterestStats;
+    @JsonProperty("developer_data")
+    private DeveloperData developerData;
 
- @JsonProperty("status_updates") 
- private List<String> statusUpdates;
+    @JsonProperty("public_interest_stats")
+    private PublicInterestStats publicInterestStats;
 
- @JsonProperty("last_updated") 
- private String lastUpdated;
+    @JsonProperty("status_updates")
+    private List<String> statusUpdates;
 
- @JsonProperty("tickers") 
- private List<Ticker> tickers;
+    @JsonProperty("last_updated")
+    private String lastUpdated;
+
+    @JsonProperty("tickers")
+    private List<Ticker> tickers;
 
 }

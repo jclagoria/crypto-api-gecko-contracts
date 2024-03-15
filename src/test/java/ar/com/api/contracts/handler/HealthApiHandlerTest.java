@@ -1,99 +1,85 @@
 package ar.com.api.contracts.handler;
 
-import ar.com.api.contracts.exception.ApiCustomException;
 import ar.com.api.contracts.model.Ping;
 import ar.com.api.contracts.services.CoinGeckoServiceStatus;
+import ar.com.api.contracts.utils.ContractTestUtils;
 import org.instancio.Instancio;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import reactor.core.publisher.Mono;
 
-import static org.mockito.Mockito.reset;
-import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertEquals;
-import static org.testng.Assert.fail;
+import static org.mockito.BDDMockito.*;
 
 public class HealthApiHandlerTest {
 
     @Mock
-    private CoinGeckoServiceStatus serviceStatus;
+    private CoinGeckoServiceStatus coinGeckoServiceStatusMock;
 
     @Mock
-    private ServerRequest serverRequest;
+    private ServerRequest serverRequestMock;
 
     @InjectMocks
-    private HealthApiHandler handler;
+    private HealthApiHandler healthApiHandler;
 
-    @BeforeMethod
-    public void setUp() {
+    @BeforeEach
+    void setUp() {
         MockitoAnnotations.openMocks(this);
     }
 
-    @AfterMethod
-    public void resetMocks() {
-        reset(serviceStatus, serverRequest);
+    @AfterEach
+    void tearDown() {
+        reset(serverRequestMock, coinGeckoServiceStatusMock);
     }
 
     @Test
-    public void getStatusServiceCoinGecko_Success() {
-        Ping expectedPing = Instancio.create(Ping.class);
-        when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.just(expectedPing));
+    @DisplayName("Ensure successfully retrieval of CoinGecko service status 200 form Handler")
+    void whenGetStatusServiceCoinGecko_ThenItShouldCallDependenciesAndFetchSuccessfully() {
+        Ping expectedObject = Instancio.create(Ping.class);
+        given(coinGeckoServiceStatusMock.getStatusCoinGeckoService())
+                .willReturn(Mono.just(expectedObject));
 
-        Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
+        Mono<ServerResponse> actualResponseMono = healthApiHandler
+                .getStatusServiceCoinGecko(serverRequestMock);
 
-        responseMono.subscribe(response -> {
-            assertEquals(response.statusCode(), HttpStatus.OK);
-        });
+        ContractTestUtils.assertMonoSuccess(actualResponseMono,
+                serverResponse -> serverResponse.statusCode().is2xxSuccessful());
+
+        verify(coinGeckoServiceStatusMock, times(1)).getStatusCoinGeckoService();
     }
 
     @Test
-    public void getStatusServiceCoinGecko_ClientError() {
-        WebClientResponseException exception = WebClientResponseException.BadRequest.create(
-                        HttpStatus.BAD_REQUEST.value(),
-                        "Bad Request",
-                        null, null, null,null);
-        when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
+    @DisplayName("Handle Not Found when retrieve CoinGecko service status 404 from Handler")
+    void whenGetStatusServiceCoinGecko_ThenItShouldCallDependenciesAndFetchNotFound() {
+        given(coinGeckoServiceStatusMock.getStatusCoinGeckoService()).willReturn(Mono.empty());
 
-        Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
+        Mono<ServerResponse> actualResponseMono = healthApiHandler
+                .getStatusServiceCoinGecko(serverRequestMock);
 
-        responseMono.subscribe(
-                responseObject -> {},
-                error -> {
-                    assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
-                    assert error.getMessage()
-                            .equals("An expected error occurred in getStatusServiceCoinGecko") :
-                            "The error message does not match.";
-                });
+        ContractTestUtils.assertMonoSuccess(actualResponseMono,
+                serverResponse -> serverResponse.statusCode().is4xxClientError());
+
+        verify(coinGeckoServiceStatusMock, times(1)).getStatusCoinGeckoService();
     }
 
     @Test
-    public void getStatusServiceCoinGecko_ServerError() {
-        WebClientResponseException exception = WebClientResponseException
-                .BadRequest.create(
-                        HttpStatus.INTERNAL_SERVER_ERROR,
-                        "Internal Server Error",
-                        null, null, null,null);
-        when(serviceStatus.getStatusCoinGeckoService()).thenReturn(Mono.error(exception));
+    @DisplayName("Handle 5xx errors when retrieving CoinGecko service status from Handler")
+    void whenGetStatusServiceCoinGecko_ThenItShouldCalledAndHandlesOnStatus5xx() {
+        given(coinGeckoServiceStatusMock.getStatusCoinGeckoService())
+                .willReturn(Mono.error(new RuntimeException("An error occurred")));
 
-        Mono<ServerResponse> responseMono = handler.getStatusServiceCoinGecko(serverRequest);
+        Mono<ServerResponse> errorResponseActual = healthApiHandler.getStatusServiceCoinGecko(serverRequestMock);
 
-        responseMono.subscribe(
-                responseObject -> {},
-                error -> {
-                    assert error instanceof ApiCustomException : "error isn't a instance of ApiCustomerException";
-                    assert error.getMessage()
-                            .equals("An expected error occurred in getStatusServiceCoinGecko") :
-                            "The error message does not match.";
-                });
-
+        ContractTestUtils.assertClient5xxServerError(errorResponseActual,
+                "An expected error occurred in getStatusServiceCoinGecko",
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }

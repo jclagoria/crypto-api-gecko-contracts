@@ -13,26 +13,27 @@ import org.springframework.web.reactive.function.server.ServerResponse;
 @Configuration
 public class ContractApiRouter {
 
- private ApiServiceConfig apiServiceConfig;
+    private ApiServiceConfig apiServiceConfig;
 
- public ContractApiRouter(ApiServiceConfig aServiceConfig) {
-  this.apiServiceConfig = aServiceConfig;
- }
- @Bean
- public RouterFunction<ServerResponse> routeContractApi(ContractApiHandler handler) {
+    public ContractApiRouter(ApiServiceConfig aServiceConfig) {
+        this.apiServiceConfig = aServiceConfig;
+    }
 
-  return RouterFunctions
-            .route()
-            .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressId(),
+    @Bean
+    public RouterFunction<ServerResponse> routeContractApi(ContractApiHandler handler) {
+
+        return RouterFunctions
+                .route()
+                .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressId(),
                         handler::getContractAddressById)
-            .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressByIdMarketChart(),
+                .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressByIdMarketChart(),
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         handler::getContractAddressMarketChartById)
-            .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressByIdMarketChartByRange(),
+                .GET(apiServiceConfig.getBaseURL() + apiServiceConfig.getContractAddressByIdMarketChartByRange(),
                         RequestPredicates.accept(MediaType.APPLICATION_JSON),
                         handler::getContractAddressMarketChartByIdAndRange)
-            .build();
+                .build();
 
- }
+    }
 
 }

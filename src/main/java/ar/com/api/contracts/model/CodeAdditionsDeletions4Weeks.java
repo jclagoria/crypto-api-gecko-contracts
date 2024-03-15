@@ -9,11 +9,11 @@ import java.io.Serializable;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class CodeAdditionsDeletions4Weeks implements Serializable {
- 
- @JsonProperty("additions")
- private double additions;
 
- @JsonProperty("deletions")
- private double deletions;
+    @JsonProperty("additions")
+    private double additions;
+
+    @JsonProperty("deletions")
+    private double deletions;
 
 }

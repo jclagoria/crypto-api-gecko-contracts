@@ -10,35 +10,35 @@ import java.util.List;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DeveloperData implements Serializable {
- 
- @JsonProperty("forks") 
- private double forks;
 
- @JsonProperty("stars")
- private double stars;
+    @JsonProperty("forks")
+    private double forks;
 
- @JsonProperty("subscribers")
- private long subscribers;
+    @JsonProperty("stars")
+    private double stars;
 
- @JsonProperty("total_issues")
- private long totalIssues;
+    @JsonProperty("subscribers")
+    private long subscribers;
 
- @JsonProperty("closed_issues")
- private long closedIssues;
+    @JsonProperty("total_issues")
+    private long totalIssues;
 
- @JsonProperty("pull_requests_merged")
- private long pullRequestsMerged;
+    @JsonProperty("closed_issues")
+    private long closedIssues;
 
- @JsonProperty("pull_request_contributors")
- private long pullRequestContributors;
+    @JsonProperty("pull_requests_merged")
+    private long pullRequestsMerged;
 
- @JsonProperty("code_additions_deletions_4_weeks")
- private CodeAdditionsDeletions4Weeks codeAdditionsDeletions4Weeks;
+    @JsonProperty("pull_request_contributors")
+    private long pullRequestContributors;
 
- @JsonProperty("commit_count_4_weeks")
- private long commitCount4Weeks;
+    @JsonProperty("code_additions_deletions_4_weeks")
+    private CodeAdditionsDeletions4Weeks codeAdditionsDeletions4Weeks;
 
- @JsonProperty("last_4_weeks_commit_activity_series")
- private List<String> last4WeeksCommitActivitySeries;
+    @JsonProperty("commit_count_4_weeks")
+    private long commitCount4Weeks;
+
+    @JsonProperty("last_4_weeks_commit_activity_series")
+    private List<String> last4WeeksCommitActivitySeries;
 
 }

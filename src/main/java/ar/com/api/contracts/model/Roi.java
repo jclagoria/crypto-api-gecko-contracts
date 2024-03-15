@@ -10,15 +10,15 @@ import java.io.Serializable;
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class Roi implements Serializable {
- 
- @ToString.Exclude 
- @JsonProperty("times")
- private double times;
 
- @JsonProperty("currency")
- private String currency;
+    @ToString.Exclude
+    @JsonProperty("times")
+    private double times;
 
- @JsonProperty("percentage")
- private double percentage;
+    @JsonProperty("currency")
+    private String currency;
+
+    @JsonProperty("percentage")
+    private double percentage;
 
 }

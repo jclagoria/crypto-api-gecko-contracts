@@ -1,256 +1,264 @@
 package ar.com.api.contracts.services;
 
 import ar.com.api.contracts.configuration.ExternalServerConfig;
+import ar.com.api.contracts.configuration.HttpServiceCall;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
 import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
+import ar.com.api.contracts.exception.ApiServerErrorException;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
+import ar.com.api.contracts.utils.ContractTestUtils;
 import org.instancio.Instancio;
+import org.instancio.InstancioApi;
+import org.instancio.TargetSelector;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.reactive.function.client.WebClient;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-import org.testng.annotations.AfterMethod;
-import org.testng.annotations.BeforeMethod;
-import org.testng.annotations.Test;
 import reactor.core.publisher.Mono;
 
-import static org.mockito.Mockito.*;
+import java.util.Optional;
+
+import static org.mockito.BDDMockito.*;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ContractsApiServiceTest {
 
-    private WebClient webClientMock;
+    @Mock
+    private HttpServiceCall httpServiceCallMock;
 
-    private WebClient.ResponseSpec responseSpecMock;
-
+    @Mock
     private ExternalServerConfig externalServerConfigMock;
 
-    private ContractsApiService contractsApiServiceMock;
+    @InjectMocks
+    private ContractsApiService contractsApiService;
 
-    @BeforeMethod
-    public void setUp() {
-        webClientMock = mock(WebClient.class);
-        WebClient.RequestHeadersUriSpec requestHeadersUriSpecMock = mock(WebClient.RequestHeadersUriSpec.class);
-        WebClient.RequestHeadersSpec requestHeadersSpecMock = mock(WebClient.RequestHeadersSpec.class);
-        responseSpecMock = mock(WebClient.ResponseSpec.class);
-        externalServerConfigMock = mock(ExternalServerConfig.class);
+    @BeforeEach
+    void setUP() {
+        MockitoAnnotations.openMocks(this);
 
-        when(webClientMock.get()).thenReturn(requestHeadersUriSpecMock);
-        when(requestHeadersUriSpecMock.uri(anyString())).thenReturn(requestHeadersSpecMock);
-        when(requestHeadersSpecMock.retrieve()).thenReturn(responseSpecMock);
-        when(responseSpecMock.onStatus(any(), any())).thenReturn(responseSpecMock);
-
-        when(externalServerConfigMock.getContractAddressById())
-                .thenReturn("/id/contract/contractAddress");
-        when(externalServerConfigMock.getContractAddressByIdMarketChart())
-                .thenReturn("/id/contract/contractAddress/marketChart/");
-        when(externalServerConfigMock.getContractAddressByIdMarketChartByRange())
-                .thenReturn("id/contract/contractAddress/market_chart/range");
-
-        contractsApiServiceMock = new ContractsApiService(webClientMock, externalServerConfigMock);
+        given(externalServerConfigMock.getContractAddressById())
+                .willReturn("contractAddressUrlCoinGeckoMock");
+        given(externalServerConfigMock.getContractAddressByIdMarketChart())
+                .willReturn("contractAddressByIdMarketChartUrlCoinGeckoMock");
+        given(externalServerConfigMock.getContractAddressByIdMarketChartByRange())
+                .willReturn("contractAddressByIdMarketCharByRangeUrlCoinGeckoMock");
     }
 
-    @AfterMethod
-    void resetMocks() {
-        reset(webClientMock, responseSpecMock, externalServerConfigMock);
+    @AfterEach
+    void tearDown() {
+        reset(externalServerConfigMock, httpServiceCallMock);
     }
 
-    @Test()
-    void testGetAssertPlatformAddressById_returnObjectSuccessfully() {
-
-        ContractAddressByIdFilterDTO filterDTOMock = Instancio.create(ContractAddressByIdFilterDTO.class);
+    @Test
+    @DisplayName("Ensure successful retrieval of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallDependenciesAndFetchSuccessfully() {
         AssertPlatformAddressById expectedObject = Instancio.create(AssertPlatformAddressById.class);
-        when(responseSpecMock.bodyToMono(AssertPlatformAddressById.class))
-                .thenReturn(Mono.just(expectedObject));
+        ContractAddressByIdFilterDTO dtoFilter = Instancio.create(ContractAddressByIdFilterDTO.class);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.just(expectedObject));
 
-        Mono<AssertPlatformAddressById> actualObject = contractsApiServiceMock
-                .getAssertPlatformAddressById(filterDTOMock);
+        Mono<AssertPlatformAddressById> actualObject = contractsApiService
+                .getAssertPlatformAddressById(dtoFilter);
 
-        actualObject.subscribe(object -> {
-            assert object.equals(expectedObject) :
-                    "The received AssertPlatformAddress does not match the expected one.";
+        ContractTestUtils.assertMonoSuccess(actualObject, assertPlatformAddressById -> {
+            assertTrue(Optional.ofNullable(assertPlatformAddressById.getPlatforms()).isPresent(),
+                    "Platforms should not be null");
+            assertTrue(Optional.of(assertPlatformAddressById.getPlatforms()).map(
+                    platforms -> !platforms.isEmpty()
+            ).orElse(false), "Platform should not be empty");
+            assertTrue(Optional.ofNullable(assertPlatformAddressById.getCategories()).isPresent(),
+                    "List of Platforms should not be null");
+            assertTrue(Optional.of(assertPlatformAddressById.getCategories()).map( listCategories ->
+                    listCategories.size() == expectedObject.getCategories().size()).orElse(false),
+                    "Total of elements in actual and expected should be equals");
         });
 
-        verify(webClientMock).get();
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
     }
 
-    @Test()
-    void testGetAssertPlatformAddressById_handle400BadRequestError() {
+    @Test
+    @DisplayName("Handle 4xx errors when retrieving CoinGecko of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
         ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
-        WebClientResponseException exceptionMock = WebClientResponseException.BadRequest
-                .create(HttpStatus.BAD_REQUEST,
-                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                        null, null, null, null);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred",
+                "Forbidden", ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.FORBIDDEN);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.error(expectedError));
 
-        when(responseSpecMock.bodyToMono(AssertPlatformAddressById.class))
-                .thenReturn(Mono.error(exceptionMock));
-
-        Mono<AssertPlatformAddressById> actualError4xx = contractsApiServiceMock
+        Mono<AssertPlatformAddressById> actualErrorObject = contractsApiService
                 .getAssertPlatformAddressById(filterDTO);
 
-        actualError4xx.subscribe(
-                actualObject -> {},
-                error -> {
-                    assert error.getMessage().equals("400 Bad Request") :
-                            "The error message does not match.";
-                });
+        ContractTestUtils.assertService4xxClientError(actualErrorObject,
+                expectedError.getMessage(), expectedError.getErrorTypeEnum());
 
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
     }
 
-    @Test()
-    void testGetAssertPlatformAddressById_handle500InternalServerError() {
+    @Test
+    @DisplayName("Handle 5xx errors when retrieving CoinGecko of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
         ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
-        WebClientResponseException exception5xxMock = WebClientResponseException
-                .InternalServerError.create(HttpStatus.INTERNAL_SERVER_ERROR,
-                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                        null, null,
-                        null, null);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred",
+                "Variant Also Negotiates", ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.VARIANT_ALSO_NEGOTIATES);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.error(expectedError));
 
-        when(responseSpecMock.bodyToMono(AssertPlatformAddressById.class))
-                .thenReturn(Mono.error(exception5xxMock));
-
-        Mono<AssertPlatformAddressById> actualError5xx = contractsApiServiceMock
+        Mono<AssertPlatformAddressById> actualErrorObject = contractsApiService
                 .getAssertPlatformAddressById(filterDTO);
 
-        actualError5xx.subscribe(
-                actualObject -> {},
-                error -> {
-                    assert error.getMessage().equals("500 Internal Server Error") :
-                            "The error message does not match.";
-                }
-        );
+        ContractTestUtils.assertService5xxServerError(actualErrorObject,
+                expectedError.getMessage(), expectedError.getErrorTypeEnum());
 
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
     }
 
-    @Test()
-    void testGetContractAddressMarketChartById_returnObjectSuccessfully() {
-
-        MarketChartDTO filterDTOMock = Instancio.create(MarketChartDTO.class);
+    @Test
+    @DisplayName("Ensure successful retrieval of Market Chart of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallDependenciesAndFetchSuccessfully() {
         MarketChart expectedObject = Instancio.create(MarketChart.class);
-        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.just(expectedObject));
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService()),
+                eq(MarketChart.class))).willReturn(Mono.just(expectedObject));
 
-        Mono<MarketChart> actualObject = contractsApiServiceMock.getContractAddressMarketChartById(filterDTOMock);
+        Mono<MarketChart> actualObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
 
-        actualObject.subscribe(object -> {
-            assert object.equals(expectedObject) :
-                    "The received AssertPlatformAddress does not match the expected one.";
-            assert !object.getMarketCaps().isEmpty();
-            assert object.getMarketCaps().size() == object.getMarketCaps().size();
-            assert object.getPrices().get(0) == object.getPrices().get(0);
-            assert object.getTotalVolumes() != null && !object.getTotalVolumes().isEmpty();
+        ContractTestUtils.assertMonoSuccess(actualObject, marketChart -> {
+            assertTrue(Optional.ofNullable(marketChart.getMarketCaps()).isPresent(),
+                    "Market Caps should not be null");
+            assertTrue(Optional.ofNullable(marketChart.getPrices()).isPresent(),
+                    "Prices should not be null");
+            assertTrue(Optional.ofNullable(marketChart.getTotalVolumes()).isPresent(),
+                    "Total Volumes should not be null");
+            assertTrue(Optional.of(marketChart.getMarketCaps())
+                            .map(listMarketCaps -> listMarketCaps.size()
+                                    == expectedObject.getMarketCaps().size()).orElse(false),
+                    "The number of objects in a Market Caps list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChart.getPrices()).map(listPrices ->
+                            listPrices.size() == expectedObject.getPrices().size()).orElse(false),
+                    "The number of objects in a Prices list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChart.getTotalVolumes()).map(listTotalVolumes ->
+                            listTotalVolumes.size() == expectedObject.getTotalVolumes().size()).orElse(false),
+                    "The number of objects in a Total Volumes list is not equal to the expected one.");
         });
 
-        verify(webClientMock).get();
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
     }
 
     @Test
-    void testGetContractAddressMarketChartById_handle4XXBadRequestError() {
+    @DisplayName("Handle 4xx errors when retrieving Market Chart By Id of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
         MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
-        WebClientResponseException exceptionMock = WebClientResponseException.BadRequest
-                .create(HttpStatus.BAD_REQUEST,
-                        HttpStatus.BAD_REQUEST.getReasonPhrase(),
-                        null, null, null, null);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred", "Forbidden",
+                ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.FORBIDDEN);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock"
+                + filterDTO.getUrlFilterService()), eq(MarketChart.class))).willReturn(Mono.error(expectedError));
 
-        when(responseSpecMock.bodyToMono(MarketChart.class))
-                .thenReturn(Mono.error(exceptionMock));
+        Mono<MarketChart> actualErrorObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
 
-        Mono<MarketChart> actualError4xx = contractsApiServiceMock
-                .getContractAddressMarketChartById(filterDTO);
+        ContractTestUtils.assertService4xxClientError(actualErrorObject, expectedError.getMessage(),
+                expectedError.getErrorTypeEnum());
 
-        actualError4xx.subscribe(
-                actualObject -> {},
-                error -> {
-                    assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
-                });
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
     }
 
     @Test
-    void testGetContractAddressMarketChartById_handle5XXInternalServerError() {
+    @DisplayName("Handle 5xx errors when retrieving Market Chart By Id of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
         MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
-        WebClientResponseException exceptionMock = WebClientResponseException.InternalServerError
-                .create(HttpStatus.INTERNAL_SERVER_ERROR,
-                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                        null, null, null, null);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred", "Insufficient Storage",
+                ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.INSUFFICIENT_STORAGE);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock"
+                + filterDTO.getUrlFilterService()), eq(MarketChart.class))).willReturn(Mono.error(expectedError));
 
-        when(responseSpecMock.bodyToMono(MarketChart.class))
-                .thenReturn(Mono.error(exceptionMock));
+        Mono<MarketChart> actualErrorObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
 
-        Mono<MarketChart> actualError5xx = contractsApiServiceMock
-                .getContractAddressMarketChartById(filterDTO);
+        ContractTestUtils.assertService5xxServerError(actualErrorObject, expectedError.getMessage(),
+                expectedError.getErrorTypeEnum());
 
-        actualError5xx.subscribe(
-                actualObject -> {},
-                error -> {
-                    assert error.getMessage()
-                            .equals("500 Internal Server Error") : "The error message does not match.";
-                });
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
     }
 
     @Test
-    void testGetContractAddressMarketChartByIdAndRange_returnObjectSuccessfully() {
-
-        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+    @DisplayName("Ensure successfully retrieval of Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallDependenciesAndFetchSuccessfully() {
         MarketChart expectedObject = Instancio.create(MarketChart.class);
-        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.just(expectedObject));
+        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+        given(httpServiceCallMock.getMonoObject(anyString(), any())).willReturn(Mono.just(expectedObject));
 
-        Mono<MarketChart> actualObject = contractsApiServiceMock
-                .getContractAddressMarketChartByIdAndRange(filterDTO);
+        Mono<MarketChart> actualObject = contractsApiService.getContractAddressMarketChartByIdAndRange(filterDTO);
 
-        actualObject.subscribe(object -> {
-            assert object.equals(expectedObject) :
-                    "The received AddressMarketChartByIdAndRange does not match the expected one.";
-            assert !object.getMarketCaps().isEmpty();
-            assert object.getMarketCaps().size() == object.getMarketCaps().size();
-            assert object.getPrices().get(0) == object.getPrices().get(0);
-            assert object.getTotalVolumes() != null && !object.getTotalVolumes().isEmpty();
+        ContractTestUtils.assertMonoSuccess(actualObject, marketChartByRange -> {
+            assertTrue(Optional.ofNullable(marketChartByRange.getMarketCaps()).isPresent(),
+                    "Market Caps should not be null");
+            assertTrue(Optional.ofNullable(marketChartByRange.getPrices()).isPresent(),
+                    "Prices should not be null");
+            assertTrue(Optional.ofNullable(marketChartByRange.getTotalVolumes()).isPresent(),
+                    "Total Volumes should not be null");
+            assertTrue(Optional.of(marketChartByRange.getMarketCaps())
+                            .map(listMarketCaps -> listMarketCaps.size()
+                                    == expectedObject.getMarketCaps().size()).orElse(false),
+                    "The number of objects in a Market Caps list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChartByRange.getPrices()).map(listPrices ->
+                            listPrices.size() == expectedObject.getPrices().size()).orElse(false),
+                    "The number of objects in a Prices list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChartByRange.getTotalVolumes()).map(listTotalVolumes ->
+                            listTotalVolumes.size() == expectedObject.getTotalVolumes().size()).orElse(false),
+                    "The number of objects in a Total Volumes list is not equal to the expected one.");
         });
 
-        verify(webClientMock).get();
-
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
     }
 
     @Test
-    void testGetContractAddressMarketChartByIdAndRange_handle4XXBadRequestError() {
-        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
-        WebClientResponseException expected4xxException = WebClientResponseException
-                .BadRequest
-                .create(HttpStatus.BAD_REQUEST,
-                        "Bad Request",
-                        null, null, null, null);
-        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.error(expected4xxException));
+    @DisplayName("Handle 4xx errors when retrieving Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
+        MarketChartByRangeDTO dtoFilter = Instancio.create(MarketChartByRangeDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred",
+                "Bad Request", ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.BAD_REQUEST);
+        given(httpServiceCallMock.getMonoObject(anyString(),
+                any())).willReturn(Mono.error(expectedError));
 
-        Mono<MarketChart> actualObject = contractsApiServiceMock
-                .getContractAddressMarketChartByIdAndRange(filterDTO);
+        Mono<MarketChart> actualErrorObject = contractsApiService
+                .getContractAddressMarketChartByIdAndRange(dtoFilter);
 
-        actualObject.subscribe(
-                object -> {},
-                error -> {
-                    assert error.getMessage().equals("400 Bad Request") : "The error message does not match.";
-                });
-
+        ContractTestUtils.assertService4xxClientError(actualErrorObject, expectedError.getMessage(),
+                ErrorTypeEnum.GECKO_CLIENT_ERROR);
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
     }
 
     @Test
-    void testGetContractAddressMarketChartByIdAndRange_handle5XXInternalServerError() {
-        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
-        WebClientResponseException expected4xxException = WebClientResponseException
-                .InternalServerError
-                .create(HttpStatus.INTERNAL_SERVER_ERROR,
-                        HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase(),
-                        null, null, null, null);
-        when(responseSpecMock.bodyToMono(MarketChart.class)).thenReturn(Mono.error(expected4xxException));
+    @DisplayName("Handle 5xx errors when retrieving Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
+        MarketChartByRangeDTO dtoFilter = Instancio.create(MarketChartByRangeDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred",
+                "Internal Server Error", ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        given(httpServiceCallMock.getMonoObject(anyString(),
+                any())).willReturn(Mono.error(expectedError));
 
-        Mono<MarketChart> actualObject = contractsApiServiceMock
-                .getContractAddressMarketChartByIdAndRange(filterDTO);
+        Mono<MarketChart> actualErrorObject = contractsApiService
+                .getContractAddressMarketChartByIdAndRange(dtoFilter);
 
-        actualObject.subscribe(
-                object -> {},
-                error -> {
-                    assert error.getMessage().equals("500 Internal Server Error") :
-                            "The error message does not match.";
-                });
-
+        ContractTestUtils.assertService5xxServerError(actualErrorObject, expectedError.getMessage(),
+                ErrorTypeEnum.GECKO_SERVER_ERROR);
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
     }
-
-
 }
