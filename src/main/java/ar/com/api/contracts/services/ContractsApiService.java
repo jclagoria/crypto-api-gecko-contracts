@@ -32,7 +32,7 @@ public class ContractsApiService {
 
         log.info("Calling method: {}", urlServiceApi);
 
-        return null;
+        return httpServiceCall.getMonoObject(urlServiceApi, AssertPlatformAddressById.class);
     }
 
     public Mono<MarketChart> getContractAddressMarketChartById(MarketChartDTO filterDto) {

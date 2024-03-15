@@ -1,10 +1,10 @@
 package ar.com.api.contracts.handler;
 
-import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
 import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.enums.ErrorTypeEnum;
 import ar.com.api.contracts.exception.ApiClientErrorException;
+import ar.com.api.contracts.handler.utilities.MapperHandler;
 import ar.com.api.contracts.services.ContractsApiService;
 import ar.com.api.contracts.validators.ValidatorOfDTOComponent;
 import lombok.extern.slf4j.Slf4j;
@@ -30,11 +30,7 @@ public class ContractApiHandler {
         log.info("Fetching Contract Address by Id from CoinGecko API");
 
         return Mono.just(sRequest)
-                .map(req -> ContractAddressByIdFilterDTO
-                        .builder()
-                        .id(req.pathVariable("id"))
-                        .contractAddress(req.pathVariable("contractAddress"))
-                        .build())
+                .flatMap(MapperHandler::createContractAddressByIdFilterDTOFromServerRequest)
                 .flatMap(validatorComponent::validation)
                 .flatMap(serviceContract::getAssertPlatformAddressById)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))

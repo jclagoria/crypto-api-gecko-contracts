@@ -38,7 +38,7 @@ public class CoinGeckoServiceStatusTest {
 
     @AfterEach
     void tearDown() {
-        reset(externalServerConfig, externalServerConfig);
+        reset(httpServiceCallMock, externalServerConfig);
     }
 
     @Test

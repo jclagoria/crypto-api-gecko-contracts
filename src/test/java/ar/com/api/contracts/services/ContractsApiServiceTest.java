@@ -1,5 +1,119 @@
 package ar.com.api.contracts.services;
 
+import ar.com.api.contracts.configuration.ExternalServerConfig;
+import ar.com.api.contracts.configuration.HttpServiceCall;
+import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.enums.ErrorTypeEnum;
+import ar.com.api.contracts.exception.ApiServerErrorException;
+import ar.com.api.contracts.model.AssertPlatformAddressById;
+import ar.com.api.contracts.utils.ContractTestUtils;
+import org.instancio.Instancio;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
+import org.springframework.http.HttpStatus;
+import reactor.core.publisher.Mono;
+
+import java.util.Optional;
+
+import static org.mockito.BDDMockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+
 public class ContractsApiServiceTest {
+
+    @Mock
+    private HttpServiceCall httpServiceCallMock;
+
+    @Mock
+    private ExternalServerConfig externalServerConfigMock;
+
+    @InjectMocks
+    private ContractsApiService contractsApiService;
+
+    @BeforeEach
+    void setUP() {
+        MockitoAnnotations.openMocks(this);
+
+        given(externalServerConfigMock.getContractAddressById())
+                .willReturn("contractAddressUrlCoinGeckoMock");
+    }
+
+    @AfterEach
+    void tearDown() {
+        reset(externalServerConfigMock, httpServiceCallMock);
+    }
+
+    @Test
+    @DisplayName("Ensure successful retrieval of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallDependenciesAndFetchSuccessfully() {
+        AssertPlatformAddressById expectedObject = Instancio.create(AssertPlatformAddressById.class);
+        ContractAddressByIdFilterDTO dtoFilter = Instancio.create(ContractAddressByIdFilterDTO.class);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.just(expectedObject));
+
+        Mono<AssertPlatformAddressById> actualObject = contractsApiService
+                .getAssertPlatformAddressById(dtoFilter);
+
+        ContractTestUtils.assertMonoSuccess(actualObject, assertPlatformAddressById -> {
+            assertTrue(Optional.ofNullable(assertPlatformAddressById.getPlatforms()).isPresent(),
+                    "Platforms should not be null");
+            assertTrue(Optional.of(assertPlatformAddressById.getPlatforms()).map(
+                    platforms -> !platforms.isEmpty()
+            ).orElse(false), "Platform should not be empty");
+            assertTrue(Optional.ofNullable(assertPlatformAddressById.getCategories()).isPresent(),
+                    "List of Platforms should not be null");
+            assertTrue(Optional.of(assertPlatformAddressById.getCategories()).map( listCategories ->
+                    listCategories.size() == expectedObject.getCategories().size()).orElse(false),
+                    "Total of elements in actual and expected should be equals");
+        });
+
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
+    }
+
+    @Test
+    @DisplayName("Handle 4xx errors when retrieving CoinGecko of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
+        ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred",
+                "Forbidden", ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.FORBIDDEN);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.error(expectedError));
+
+        Mono<AssertPlatformAddressById> actualErrorObject = contractsApiService
+                .getAssertPlatformAddressById(filterDTO);
+
+        ContractTestUtils.assertService4xxClientError(actualErrorObject,
+                expectedError.getMessage(), expectedError.getErrorTypeEnum());
+
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
+    }
+
+    @Test
+    @DisplayName("Handle 5xx errors when retrieving CoinGecko of Contract Address of CoinGecko service")
+    void whenGetAssertPlatformAddressById_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
+        ContractAddressByIdFilterDTO filterDTO = Instancio.create(ContractAddressByIdFilterDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred",
+                "Variant Also Negotiates", ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.VARIANT_ALSO_NEGOTIATES);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressUrlCoinGeckoMock"),
+                eq(AssertPlatformAddressById.class))).willReturn(Mono.error(expectedError));
+
+        Mono<AssertPlatformAddressById> actualErrorObject = contractsApiService
+                .getAssertPlatformAddressById(filterDTO);
+
+        ContractTestUtils.assertService5xxServerError(actualErrorObject,
+                expectedError.getMessage(), expectedError.getErrorTypeEnum());
+
+        verify(externalServerConfigMock, times(1)).getContractAddressById();
+        verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
+                AssertPlatformAddressById.class);
+    }
 
 }
