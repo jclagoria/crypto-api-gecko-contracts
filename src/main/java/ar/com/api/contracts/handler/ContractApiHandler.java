@@ -48,14 +48,7 @@ public class ContractApiHandler {
         log.info("Fetching Contract Address Market Chart by Id from CoinGecko API");
 
         return Mono.just(sRequest)
-                .map(req -> MarketChartDTO
-                        .builder()
-                        .id(req.pathVariable("id"))
-                        .contractAddress(req.pathVariable("contractAddress"))
-                        .vsCurrency(req.queryParam("vsCurrency").get())
-                        .days(req.queryParam("days").get())
-                        .precision(req.queryParam("precision"))
-                        .build())
+                .flatMap(MapperHandler::createMarketChartDTOFilterDTOFromServerRequest)
                 .flatMap(validatorComponent::validation)
                 .flatMap(serviceContract::getContractAddressMarketChartById)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))

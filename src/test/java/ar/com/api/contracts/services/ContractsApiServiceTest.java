@@ -3,9 +3,11 @@ package ar.com.api.contracts.services;
 import ar.com.api.contracts.configuration.ExternalServerConfig;
 import ar.com.api.contracts.configuration.HttpServiceCall;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.enums.ErrorTypeEnum;
 import ar.com.api.contracts.exception.ApiServerErrorException;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
+import ar.com.api.contracts.model.MarketChart;
 import ar.com.api.contracts.utils.ContractTestUtils;
 import org.instancio.Instancio;
 import org.junit.jupiter.api.AfterEach;
@@ -40,6 +42,8 @@ public class ContractsApiServiceTest {
 
         given(externalServerConfigMock.getContractAddressById())
                 .willReturn("contractAddressUrlCoinGeckoMock");
+        given(externalServerConfigMock.getContractAddressByIdMarketChart())
+                .willReturn("contractAddressByIdMarketChartUrlCoinGeckoMock");
     }
 
     @AfterEach
@@ -114,6 +118,78 @@ public class ContractsApiServiceTest {
         verify(externalServerConfigMock, times(1)).getContractAddressById();
         verify(httpServiceCallMock).getMonoObject("contractAddressUrlCoinGeckoMock",
                 AssertPlatformAddressById.class);
+    }
+
+    @Test
+    @DisplayName("Ensure successful retrieval of Market Chart of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallDependenciesAndFetchSuccessfully() {
+        MarketChart expectedObject = Instancio.create(MarketChart.class);
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService()),
+                eq(MarketChart.class))).willReturn(Mono.just(expectedObject));
+
+        Mono<MarketChart> actualObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
+
+        ContractTestUtils.assertMonoSuccess(actualObject, marketChart -> {
+            assertTrue(Optional.ofNullable(marketChart.getMarketCaps()).isPresent(),
+                    "Market Caps should not be null");
+            assertTrue(Optional.ofNullable(marketChart.getPrices()).isPresent(),
+                    "Prices should not be null");
+            assertTrue(Optional.ofNullable(marketChart.getTotalVolumes()).isPresent(),
+                    "Total Volumes should not be null");
+            assertTrue(Optional.of(marketChart.getMarketCaps())
+                            .map(listMarketCaps -> listMarketCaps.size()
+                                    == expectedObject.getMarketCaps().size()).orElse(false),
+                    "The number of objects in a Market Caps list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChart.getPrices()).map(listPrices ->
+                            listPrices.size() == expectedObject.getPrices().size()).orElse(false),
+                    "The number of objects in a Prices list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChart.getTotalVolumes()).map(listTotalVolumes ->
+                            listTotalVolumes.size() == expectedObject.getTotalVolumes().size()).orElse(false),
+                    "The number of objects in a Total Volumes list is not equal to the expected one.");
+        });
+
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
+    }
+
+    @Test
+    @DisplayName("Handle 4xx errors when retrieving Market Chart By Id of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred", "Forbidden",
+                ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.FORBIDDEN);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock"
+                + filterDTO.getUrlFilterService()), eq(MarketChart.class))).willReturn(Mono.error(expectedError));
+
+        Mono<MarketChart> actualErrorObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
+
+        ContractTestUtils.assertService4xxClientError(actualErrorObject, expectedError.getMessage(),
+                expectedError.getErrorTypeEnum());
+
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
+    }
+
+    @Test
+    @DisplayName("Handle 5xx errors when retrieving Market Chart By Id of CoinGecko service")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred", "Insufficient Storage",
+                ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.INSUFFICIENT_STORAGE);
+        given(httpServiceCallMock.getMonoObject(eq("contractAddressByIdMarketChartUrlCoinGeckoMock"
+                + filterDTO.getUrlFilterService()), eq(MarketChart.class))).willReturn(Mono.error(expectedError));
+
+        Mono<MarketChart> actualErrorObject = contractsApiService.getContractAddressMarketChartById(filterDTO);
+
+        ContractTestUtils.assertService5xxServerError(actualErrorObject, expectedError.getMessage(),
+                expectedError.getErrorTypeEnum());
+
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChart();
+        verify(httpServiceCallMock).getMonoObject("contractAddressByIdMarketChartUrlCoinGeckoMock" + filterDTO.getUrlFilterService(),
+                MarketChart.class);
     }
 
 }

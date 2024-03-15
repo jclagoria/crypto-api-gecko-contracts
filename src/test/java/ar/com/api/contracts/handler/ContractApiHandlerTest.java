@@ -1,8 +1,9 @@
 package ar.com.api.contracts.handler;
 
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
-import ar.com.api.contracts.exception.ApiClientErrorException;
+import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.model.AssertPlatformAddressById;
+import ar.com.api.contracts.model.MarketChart;
 import ar.com.api.contracts.services.ContractsApiService;
 import ar.com.api.contracts.utils.ContractTestUtils;
 import ar.com.api.contracts.validators.ValidatorOfDTOComponent;
@@ -17,6 +18,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Mono;
+
+import java.util.Optional;
 
 import static org.mockito.BDDMockito.*;
 
@@ -93,6 +96,71 @@ public class ContractApiHandlerTest {
                 HttpStatus.INTERNAL_SERVER_ERROR);
 
         verify(contractsApiServiceMock, times(1)).getAssertPlatformAddressById(filterDTO);
+    }
+
+    @Test
+    @DisplayName("Ensure successfully retrieval Contract AddressMarket Char tBy Id service status 200 from Handler")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallDependenciesAndFetchSuccessfully() {
+        MarketChart expectedObject = Instancio.create(MarketChart.class);
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("usd"));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("14"));
+        given(validatorOfDTOComponentMock.validation(any())).willReturn(Mono.just(filterDTO));
+        given(contractsApiServiceMock.getContractAddressMarketChartById(any(MarketChartDTO.class)))
+                .willReturn(Mono.just(expectedObject));
+
+        Mono<ServerResponse> expectedResponseObject = apiHandler.getContractAddressMarketChartById(serverRequestMock);
+
+        ContractTestUtils.assertMonoSuccess(expectedResponseObject,
+                serverResponse -> serverResponse.statusCode().is2xxSuccessful());
+
+        verify(contractsApiServiceMock, times(1))
+                .getContractAddressMarketChartById(filterDTO);
+    }
+
+    @Test
+    @DisplayName("Ensure successfully retrieval Market Chart service status 404 Not found from Handler")
+    void whenGetContractAddressMarketChartById_ThenItShouldCallDependenciesAndFetchNotFound () {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("usd"));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("14"));
+        given(validatorOfDTOComponentMock.validation(any())).willReturn(Mono.just(filterDTO));
+        given(contractsApiServiceMock.getContractAddressMarketChartById(any(MarketChartDTO.class)))
+                .willReturn(Mono.empty());
+
+        Mono<ServerResponse> expectedNotFoundObject = apiHandler.getContractAddressMarketChartById(serverRequestMock);
+
+        ContractTestUtils.assertMonoSuccess(expectedNotFoundObject, serverResponse ->
+                serverResponse.statusCode().is4xxClientError());
+
+        verify(contractsApiServiceMock, times(1))
+                .getContractAddressMarketChartById(filterDTO);
+    }
+
+    @Test
+    @DisplayName("Ensure error handling in getContractAddressMarketChartById returns INTERNAL_SERVER_ERROR")
+    void whenGetContractAddressMarketChartById_ThenItShouldHandleErrorAndReturnInternalServerError() {
+        MarketChartDTO filterDTO = Instancio.create(MarketChartDTO.class);
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.pathVariable(anyString())).willReturn(Instancio.create(String.class));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("usd"));
+        given(serverRequestMock.queryParam(anyString())).willReturn(Optional.of("14"));
+        given(validatorOfDTOComponentMock.validation(any())).willReturn(Mono.just(filterDTO));
+        given(contractsApiServiceMock.getContractAddressMarketChartById(any(MarketChartDTO.class)))
+                .willReturn(Mono.error(new RuntimeException("Unexpected Error")));
+
+        Mono<ServerResponse> actualErrorObject = apiHandler.getContractAddressMarketChartById(serverRequestMock);
+
+        ContractTestUtils.assertClient5xxServerError(actualErrorObject,
+                "An expected error occurred in getContractAddressMarketChartById",
+                HttpStatus.INTERNAL_SERVER_ERROR);
+
+        verify(contractsApiServiceMock, times(1))
+                .getContractAddressMarketChartById(filterDTO);
     }
 
 }
