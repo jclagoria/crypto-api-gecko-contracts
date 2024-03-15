@@ -34,6 +34,7 @@ public class ContractApiHandler {
                 .flatMap(validatorComponent::validation)
                 .flatMap(serviceContract::getAssertPlatformAddressById)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .doOnSubscribe(subscription -> log.info("Retrieving Assert PlatformAddress By Id"))
                 .switchIfEmpty(ServerResponse.notFound().build())
                 .onErrorResume(error ->
                         Mono.error(
@@ -52,6 +53,7 @@ public class ContractApiHandler {
                 .flatMap(validatorComponent::validation)
                 .flatMap(serviceContract::getContractAddressMarketChartById)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .doOnSubscribe(subscription -> log.info("Retrieving Contract Address Market Chart By Id"))
                 .switchIfEmpty(ServerResponse.notFound().build())
                 .onErrorResume(error ->
                         Mono.error(
@@ -66,18 +68,11 @@ public class ContractApiHandler {
         log.info("Fetching Contract Address Market Chart by Id and Range from CoinGecko API");
 
         return Mono.just(sRequest)
-                .map(req -> MarketChartByRangeDTO
-                        .builder()
-                        .id(req.pathVariable("id"))
-                        .contractAddress(req.pathVariable("contractAddress"))
-                        .vsCurrency(req.queryParam("vsCurrency").get())
-                        .fromDate(req.queryParam("fromDate").get())
-                        .toDate(req.queryParam("toDate").get())
-                        .precision(req.queryParam("precision"))
-                        .build())
+                .flatMap(MapperHandler::createMarketChartByRangeDTOFromServerRequest)
                 .flatMap(validatorComponent::validation)
                 .flatMap(serviceContract::getContractAddressMarketChartByIdAndRange)
                 .flatMap(result -> ServerResponse.ok().bodyValue(result))
+                .doOnSubscribe(subscription -> log.info("Retrieving Contract Address Market Chart By Id and Range"))
                 .switchIfEmpty(ServerResponse.notFound().build())
                 .onErrorResume(error ->
                         Mono.error(

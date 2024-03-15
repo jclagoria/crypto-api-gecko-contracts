@@ -3,6 +3,7 @@ package ar.com.api.contracts.services;
 import ar.com.api.contracts.configuration.ExternalServerConfig;
 import ar.com.api.contracts.configuration.HttpServiceCall;
 import ar.com.api.contracts.dto.ContractAddressByIdFilterDTO;
+import ar.com.api.contracts.dto.MarketChartByRangeDTO;
 import ar.com.api.contracts.dto.MarketChartDTO;
 import ar.com.api.contracts.enums.ErrorTypeEnum;
 import ar.com.api.contracts.exception.ApiServerErrorException;
@@ -10,6 +11,8 @@ import ar.com.api.contracts.model.AssertPlatformAddressById;
 import ar.com.api.contracts.model.MarketChart;
 import ar.com.api.contracts.utils.ContractTestUtils;
 import org.instancio.Instancio;
+import org.instancio.InstancioApi;
+import org.instancio.TargetSelector;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -44,6 +47,8 @@ public class ContractsApiServiceTest {
                 .willReturn("contractAddressUrlCoinGeckoMock");
         given(externalServerConfigMock.getContractAddressByIdMarketChart())
                 .willReturn("contractAddressByIdMarketChartUrlCoinGeckoMock");
+        given(externalServerConfigMock.getContractAddressByIdMarketChartByRange())
+                .willReturn("contractAddressByIdMarketCharByRangeUrlCoinGeckoMock");
     }
 
     @AfterEach
@@ -192,4 +197,68 @@ public class ContractsApiServiceTest {
                 MarketChart.class);
     }
 
+    @Test
+    @DisplayName("Ensure successfully retrieval of Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallDependenciesAndFetchSuccessfully() {
+        MarketChart expectedObject = Instancio.create(MarketChart.class);
+        MarketChartByRangeDTO filterDTO = Instancio.create(MarketChartByRangeDTO.class);
+        given(httpServiceCallMock.getMonoObject(anyString(), any())).willReturn(Mono.just(expectedObject));
+
+        Mono<MarketChart> actualObject = contractsApiService.getContractAddressMarketChartByIdAndRange(filterDTO);
+
+        ContractTestUtils.assertMonoSuccess(actualObject, marketChartByRange -> {
+            assertTrue(Optional.ofNullable(marketChartByRange.getMarketCaps()).isPresent(),
+                    "Market Caps should not be null");
+            assertTrue(Optional.ofNullable(marketChartByRange.getPrices()).isPresent(),
+                    "Prices should not be null");
+            assertTrue(Optional.ofNullable(marketChartByRange.getTotalVolumes()).isPresent(),
+                    "Total Volumes should not be null");
+            assertTrue(Optional.of(marketChartByRange.getMarketCaps())
+                            .map(listMarketCaps -> listMarketCaps.size()
+                                    == expectedObject.getMarketCaps().size()).orElse(false),
+                    "The number of objects in a Market Caps list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChartByRange.getPrices()).map(listPrices ->
+                            listPrices.size() == expectedObject.getPrices().size()).orElse(false),
+                    "The number of objects in a Prices list is not equal to the expected one.");
+            assertTrue(Optional.of(marketChartByRange.getTotalVolumes()).map(listTotalVolumes ->
+                            listTotalVolumes.size() == expectedObject.getTotalVolumes().size()).orElse(false),
+                    "The number of objects in a Total Volumes list is not equal to the expected one.");
+        });
+
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
+    }
+
+    @Test
+    @DisplayName("Handle 4xx errors when retrieving Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallAndFetchAndHandleOnStatus4xx() {
+        MarketChartByRangeDTO dtoFilter = Instancio.create(MarketChartByRangeDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiClient error occurred",
+                "Bad Request", ErrorTypeEnum.GECKO_CLIENT_ERROR, HttpStatus.BAD_REQUEST);
+        given(httpServiceCallMock.getMonoObject(anyString(),
+                any())).willReturn(Mono.error(expectedError));
+
+        Mono<MarketChart> actualErrorObject = contractsApiService
+                .getContractAddressMarketChartByIdAndRange(dtoFilter);
+
+        ContractTestUtils.assertService4xxClientError(actualErrorObject, expectedError.getMessage(),
+                ErrorTypeEnum.GECKO_CLIENT_ERROR);
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
+    }
+
+    @Test
+    @DisplayName("Handle 5xx errors when retrieving Market Chart By Id And Range of CoinGecko service")
+    void whenGetContractAddressMarketChartByIdAndRange_ThenItShouldCallAndFetchAndHandleOnStatus5xx() {
+        MarketChartByRangeDTO dtoFilter = Instancio.create(MarketChartByRangeDTO.class);
+        ApiServerErrorException expectedError = new ApiServerErrorException("ApiServer error occurred",
+                "Internal Server Error", ErrorTypeEnum.GECKO_SERVER_ERROR, HttpStatus.INTERNAL_SERVER_ERROR);
+        given(httpServiceCallMock.getMonoObject(anyString(),
+                any())).willReturn(Mono.error(expectedError));
+
+        Mono<MarketChart> actualErrorObject = contractsApiService
+                .getContractAddressMarketChartByIdAndRange(dtoFilter);
+
+        ContractTestUtils.assertService5xxServerError(actualErrorObject, expectedError.getMessage(),
+                ErrorTypeEnum.GECKO_SERVER_ERROR);
+        verify(externalServerConfigMock, times(1)).getContractAddressByIdMarketChartByRange();
+    }
 }

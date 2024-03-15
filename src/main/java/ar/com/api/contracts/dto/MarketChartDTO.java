@@ -32,8 +32,9 @@ public class MarketChartDTO extends CommonFilterDTO implements IFilterDTO {
 
         StringBuilder urlBuilder = new StringBuilder();
         urlBuilder.append("?vs_currency=").append(vsCurrency)
-                .append("&days=").append(days)
-                .append("&precision=").append(precision.orElse("18"));
+                .append("&days=").append(days);
+        this.precision.ifPresentOrElse(valuePrecision -> urlBuilder.append("&precision=").append(valuePrecision),
+                () -> urlBuilder.append("&precision=18"));
 
         return urlBuilder.toString();
     }

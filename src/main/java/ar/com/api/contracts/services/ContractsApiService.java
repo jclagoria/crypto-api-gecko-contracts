@@ -56,7 +56,7 @@ public class ContractsApiService {
 
         log.info("Calling method: {}", urlService + filterDto.getUrlFilterService());
 
-        return null;
+        return httpServiceCall.getMonoObject(urlService + filterDto.getUrlFilterService(), MarketChart.class);
     }
 
 }
